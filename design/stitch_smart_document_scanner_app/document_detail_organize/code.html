@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "tertiary-container": "#007bb9",
+          "surface-variant": "#dae2fd",
+          "on-tertiary-container": "#fdfcff",
+          "tertiary-fixed": "#cce5ff",
+          "surface-container-lowest": "#ffffff",
+          "on-tertiary": "#ffffff",
+          "surface-bright": "#faf8ff",
+          "on-primary-container": "#f5fff7",
+          "surface-tint": "#006c4a",
+          "primary-fixed": "#8af8c5",
+          "surface-container-low": "#f2f3ff",
+          "error-container": "#ffdad6",
+          "outline-variant": "#e2e8f0",
+          "primary-container": "#006948",
+          "on-secondary-fixed": "#00201d",
+          "on-secondary-fixed-variant": "#00504a",
+          "on-error-container": "#93000a",
+          "surface-container": "#eaedff",
+          "on-error": "#ffffff",
+          "surface": "#f8fafc",
+          "surface-container-highest": "#dae2fd",
+          "inverse-primary": "#6ddbaa",
+          "inverse-surface": "#283044",
+          "tertiary-fixed-dim": "#93ccff",
+          "on-surface-variant": "#475569",
+          "on-tertiary-fixed": "#001d31",
+          "outline": "#94a3b8",
+          "inverse-on-surface": "#eef0ff",
+          "on-surface": "#0f172a",
+          "secondary-fixed": "#9cf2e8",
+          "on-secondary": "#ffffff",
+          "secondary": "#006a63",
+          "error": "#ba1a1a",
+          "on-background": "#0f172a",
+          "secondary-container": "#ccfbf1",
+          "on-tertiary-fixed-variant": "#004b73",
+          "primary": "#006948",
+          "surface-dim": "#d2d9f4",
+          "background": "#f8fafc",
+          "on-primary-fixed-variant": "#005237",
+          "secondary-fixed-dim": "#80d5cb",
+          "tertiary": "#006194",
+          "surface-container-high": "#e2e7ff",
+          "primary-fixed-dim": "#6ddbaa",
+          "on-primary": "#ffffff",
+          "on-primary-fixed": "#002114",
+          "on-secondary-container": "#004d47"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.25rem",
+          "lg": "0.5rem",
+          "xl": "0.75rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "space-xs": "0.25rem",
+          "space-md": "1rem",
+          "space-xl": "2rem",
+          "margin-tablet": "1.5rem",
+          "gutter-desktop": "1.5rem",
+          "margin": "1rem",
+          "margin-desktop": "2.5rem",
+          "space-lg": "1.5rem",
+          "gutter": "1rem",
+          "space-sm": "0.5rem"
+        },
+        "fontFamily": {
+          "label-lg": ["Space Grotesk"],
+          "label-md": ["Space Grotesk"],
+          "display-lg": ["Space Grotesk"],
+          "headline-lg-mobile": ["Space Grotesk"],
+          "headline-lg": ["Space Grotesk"],
+          "headline-sm": ["Space Grotesk"],
+          "body-lg": ["Inter"],
+          "body-sm": ["Inter"],
+          "label-sm": ["Space Grotesk"],
+          "body-md": ["Inter"],
+          "headline-md": ["Space Grotesk"]
+        },
+        "fontSize": {
+          "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+          "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+          "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+          "headline-lg-mobile": ["26px", { "lineHeight": "34px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+          "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+          "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "500" }],
+          "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+          "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+          "label-sm": ["10px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }],
+          "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+          "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+        }
+      }
+    }
+  };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head><body class="bg-background text-on-surface font-body-md text-body-md antialiased min-h-screen flex flex-col"><header class="fixed top-0 w-full z-50 pt-safe bg-white/90 backdrop-blur-xl border-b border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.05)]"><div class="h-16 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><button aria-label="Go Back" class="w-10 h-10 flex items-center justify-center rounded-lg text-slate-700 hover:text-primary hover:bg-slate-100 transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><img alt="ScanCraft Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkHCLbYKL0IEKfqixtyLiIJ-da_avO7bBfSlvT4CZBK2s_GF9qmSP44wVLhWmLpw0LnZ5p8hxASWfEMdLdji5Sw_dTEHpYPwpG3UEmsqNtCRQ3EIAcy-nc_h4urMstHqHRjYI6nbZ4wLkHHOB6wWG2Mz472B-2u23Hhn93wRX8b8mYdivM_qCP0c6yBXi2mcDv8CTkVw4mZPx1gYEPjWKAqMeMFOx_Ty8tCClucOE"/><h1 class="font-headline-md text-[18px] text-slate-900 font-semibold truncate">Document Inspection</h1></div><div class="flex items-center gap-space-xs"><button aria-label="More actions" class="w-10 h-10 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"><span class="material-symbols-outlined text-[22px]">more_vert</span></button><img alt="Profile" class="w-8 h-8 rounded-full object-cover border border-slate-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0RnlwTmE9N95W0v8HjEKdkvMZ2grAkq9nztgjeF6VpBt7kkNhNLHgjL3bOQ4-XENObET6ZG4FUgbVY4kzyYx_9tHasN_waaDsmLpT1wyheq1OypGyFOJKNYFvkQYjWRkWTpvXh4tKbg2RWOf6E1wgEOnq_3nsiL6zQUfdOS9i45lxuZ0z0pvV5_U2OFN3e6VexNObWoWJys8s5kniBU-m-YVu40nKb7_w6dyKOQY"/></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 bg-background pb-safe"><div class="flex flex-col w-full px-margin pb-space-xl space-y-space-md pt-3">
+<!-- Offline Local Storage Badge Banner -->
+<div class="flex items-center justify-between px-3.5 py-2.5 bg-emerald-50/90 border border-emerald-200 rounded-xl shadow-xs">
+<div class="flex items-center gap-2.5">
+<div class="w-7 h-7 rounded-full bg-emerald-100 text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="font-headline-md text-[13px] font-semibold text-emerald-950">100% Offline Compatible</span>
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+</div>
+<span class="block font-body-sm text-[11px] text-emerald-800">Saved to Device Storage • Zero Cloud Transmission</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded bg-emerald-600/10 text-emerald-700 font-label-sm text-[10px] font-bold uppercase tracking-wider">Local Only</span>
+</div>
+<!-- Document Header Bar / Quick Actions -->
+<div class="flex items-center justify-between gap-space-sm bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+<div class="flex items-center gap-space-sm flex-1 min-w-0">
+<div class="w-10 h-10 rounded-lg bg-emerald-50 text-primary border border-emerald-100 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">description</span>
+</div>
+<div class="flex items-center gap-space-xs flex-1 min-w-0" id="filename-container">
+<input class="bg-transparent font-headline-md text-[17px] font-semibold text-slate-900 truncate focus:outline-none focus:bg-slate-100 px-space-xs rounded transition-colors w-full" id="filename-input" title="Click to rename" type="text" value="Invoice_2025_AcmeCorp"/>
+<span class="font-label-md text-label-md text-slate-400 shrink-0">.pdf</span>
+<button aria-label="Edit title" class="text-slate-400 hover:text-primary transition-colors p-1 shrink-0" id="edit-name-btn">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+</div>
+</div>
+<div class="flex items-center gap-space-xs shrink-0">
+<button aria-label="Star document" class="w-9 h-9 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-200 text-slate-500 hover:text-amber-500 hover:border-amber-200 transition-colors" id="favorite-btn">
+<span class="material-symbols-outlined text-[20px]">star</span>
+</button>
+<button aria-label="Share document" class="w-9 h-9 flex items-center justify-center rounded-lg bg-primary text-white hover:bg-emerald-800 transition-colors shadow-xs">
+<span class="material-symbols-outlined text-[20px]">share</span>
+</button>
+</div>
+</div>
+<!-- Interactive Multi-Page Viewport & Reordering -->
+<div class="flex flex-col space-y-space-sm">
+<div class="flex items-center justify-between px-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-md text-label-md text-slate-800 font-semibold uppercase tracking-wider">Scanned Sheets</span>
+<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-label-sm text-label-sm font-semibold">4 Pages</span>
+</div>
+<button class="flex items-center gap-1 font-label-md text-label-md text-primary hover:text-emerald-700 font-semibold transition-colors">
+<span class="material-symbols-outlined text-[16px]">swap_vert</span>
+<span>Reorder</span>
+</button>
+</div>
+<!-- Scanned Pages Horizontal Strip -->
+<div class="flex gap-space-sm overflow-x-auto pb-2 pt-1 -mx-margin px-margin">
+<!-- Page 1 -->
+<div class="relative shrink-0 w-36 flex flex-col bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm group">
+<div class="relative w-full h-48 bg-slate-100 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Monochrome studio scan macro view of standard business invoice page 1 with tabular line items and payment total, hyper-realistic, dark slate background tones, crisp typography with scan grid guides." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmpMmxe6XWIP3uy_T9py2WW7jipiKnMdz6-W8rfXDkwlKRjCBDZF7VGj4X5_dignm5OUA5LKhO5K--DsMkPuDJCNdr-ybP_LHAOpNxzDPvMv23J_PXt_Pg_NEu4XzWva_zhu1_Q6bz2mEjDCSTngAThYlFplhSb4oPxXdF1EZP9zQ9A-tBNDZ3JOhKhwf88Se7RRQpAbZX0w6B6BpT-72fHWkgtV1DnUQXYJNw1MI"/>
+<div class="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-white/90 backdrop-blur-md text-slate-900 font-label-sm text-label-sm border border-slate-200 font-semibold">
+            P. 1
+          </div>
+<button aria-label="Remove Page 1" class="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-100 border border-red-200 text-red-600 flex items-center justify-center hover:bg-red-200 transition-colors">
+<span class="material-symbols-outlined text-[14px]">close</span>
+</button>
+</div>
+<div class="p-2 flex items-center justify-between bg-slate-50 border-t border-slate-100">
+<span class="font-label-sm text-label-sm text-slate-700 font-medium truncate">Master Invoice</span>
+<span class="material-symbols-outlined text-[16px] text-slate-400 cursor-grab">drag_indicator</span>
+</div>
+</div>
+<!-- Page 2 -->
+<div class="relative shrink-0 w-36 flex flex-col bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm group">
+<div class="relative w-full h-48 bg-slate-100 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="High resolution clean document scan of itemized expense receipts and VAT breakdown sheet, clear table borders, high contrast digital archival document capture." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxZhZ1QVh319JYXl9WtzJuGv2xhD7qJ9sEOu7ZxR6x2J07V9UM4pPGuqPo0AIfcZDZTuWyGAADGYt47TTfYp7XcLwkHnwRUf8-6CS-LdoyZglioj21K1yUYEXVsugRlbioYhsBdsnzGU8MXHIohEI3AAR1eLEgEpkgaLq-jrctOBzw_H_jZsekr43mRrXD768ByPVWtWFDC7_sFt5luqg3dgcfHiodG7C7j21DoRk"/>
+<div class="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-white/90 backdrop-blur-md text-slate-900 font-label-sm text-label-sm border border-slate-200 font-semibold">
+            P. 2
+          </div>
+<button aria-label="Remove Page 2" class="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-100 border border-red-200 text-red-600 flex items-center justify-center hover:bg-red-200 transition-colors">
+<span class="material-symbols-outlined text-[14px]">close</span>
+</button>
+</div>
+<div class="p-2 flex items-center justify-between bg-slate-50 border-t border-slate-100">
+<span class="font-label-sm text-label-sm text-slate-700 font-medium truncate">VAT Ledger</span>
+<span class="material-symbols-outlined text-[16px] text-slate-400 cursor-grab">drag_indicator</span>
+</div>
+</div>
+<!-- Page 3 -->
+<div class="relative shrink-0 w-36 flex flex-col bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm group">
+<div class="relative w-full h-48 bg-slate-100 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Digital document scan of professional contract addendum with signature lines and legal disclaimer text, perfectly aligned document boundary, dark mode palette styling." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9PLLSYRdbNDriT_-HxezlemBNRSv2YuPdQAnbmBkjy4VuM-7RgUpPY4ahHY_6Y8kr9eYL7ZLbFZHPxaZlIKFNdcA2nRND3kTkGDxzpuceg-HQDn2jYljN2AVJPZvy-CVPktgqkOqugIjMmvs1cM92To3sw1ADRPxcnJRtyAhd3qqMFk5pvvRM4UMHtEyNxf4z3P0HgCeGEeCG7HGWFsZlV5WJ75WmTLfcAXgcke0"/>
+<div class="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-white/90 backdrop-blur-md text-slate-900 font-label-sm text-label-sm border border-slate-200 font-semibold">
+            P. 3
+          </div>
+<button aria-label="Remove Page 3" class="absolute top-2 right-2 w-6 h-6 rounded-full bg-error-container text-on-error-container flex items-center justify-center hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[14px]">close</span>
+</button>
+</div>
+<div class="p-2 flex items-center justify-between bg-slate-50 border-t border-slate-100">
+<span class="font-label-sm text-label-sm text-slate-700 font-medium truncate">Terms &amp; Sig</span>
+<span class="material-symbols-outlined text-[16px] text-slate-400 cursor-grab">drag_indicator</span>
+</div>
+</div>
+<!-- Page 4 -->
+<div class="relative shrink-0 w-36 flex flex-col bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm group">
+<div class="relative w-full h-48 bg-slate-100 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Sharp monochrome digital capture of payment confirmation bank receipt slip, bar code visible at top right, ultra fine detail, neutral cool tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnupWkKSyxtTG0mE8hV7XfVIAjzlhX--0rcvO7GkhwSrmhPBQKXRhMZAedsOmrt_GC0bTQVGgLA_Z0Lxmyo0bSgg_4csiww6lT_pQctADytwq1vmRo_MW6WmILWSu29j9p9b8YCthUmBDmzgyxTXLcJC8LA8XNryLFGB2kYeKtQQwU_Tb-xCAwVs8IR9rKxfMd5hj4oeaCtlHl0hAGg3Cm1S4IyOJGDnBW2Lg5Lhk"/>
+<div class="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-white/90 backdrop-blur-md text-slate-900 font-label-sm text-label-sm border border-slate-200 font-semibold">
+            P. 4
+          </div>
+<button aria-label="Remove Page 4" class="absolute top-2 right-2 w-6 h-6 rounded-full bg-error-container text-on-error-container flex items-center justify-center hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[14px]">close</span>
+</button>
+</div>
+<div class="p-2 flex items-center justify-between bg-slate-50 border-t border-slate-100">
+<span class="font-label-sm text-label-sm text-slate-700 font-medium truncate">Receipt Wire</span>
+<span class="material-symbols-outlined text-[16px] text-slate-400 cursor-grab">drag_indicator</span>
+</div>
+</div>
+<!-- Add Page Slot -->
+<button class="relative shrink-0 w-32 flex flex-col items-center justify-center bg-white rounded-xl p-4 border border-dashed border-slate-300 hover:border-primary hover:bg-emerald-50/50 transition-colors group">
+<div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+<span class="material-symbols-outlined text-[24px]">add_photo_alternate</span>
+</div>
+<span class="mt-2 font-headline-md text-[14px] text-slate-800 text-center font-semibold">+ Page</span>
+<span class="font-label-sm text-label-sm text-slate-500 mt-0.5">Camera / Files</span>
+</button>
+</div>
+</div>
+<!-- Organization & Metadata Card -->
+<div class="bg-white rounded-xl p-space-md space-y-space-md border border-slate-200 shadow-sm">
+<!-- Folder Row -->
+<div class="flex items-center justify-between gap-space-sm bg-slate-50 border border-slate-200 p-3 rounded-lg">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-10 h-10 rounded-lg bg-emerald-100 text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">folder</span>
+</div>
+<div class="min-w-0">
+<span class="block font-label-sm text-label-sm text-slate-500 uppercase tracking-wider font-semibold">Folder Destination</span>
+<span class="block font-headline-md text-[15px] font-semibold text-slate-900 truncate" id="current-folder-text">Tax &amp; Invoices / 2025 Q4</span>
+</div>
+</div>
+<button class="px-3 py-1.5 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-secondary font-label-md text-label-md flex items-center gap-1 transition-colors shrink-0 font-semibold" id="open-folder-picker">
+<span>Move</span>
+<span class="material-symbols-outlined text-[16px]">folder_open</span>
+</button>
+</div>
+<!-- Metadata Details Grid -->
+<div class="grid grid-cols-2 gap-space-xs bg-slate-50 border border-slate-100 p-3 rounded-lg">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-slate-400">calendar_today</span>
+<div>
+<span class="block font-label-sm text-label-sm text-slate-500">Created</span>
+<span class="block font-label-md text-label-md text-slate-800 font-semibold">Oct 24, 2025</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-slate-400">database</span>
+<div>
+<span class="block font-label-sm text-label-sm text-slate-500">File Weight</span>
+<span class="block font-label-md text-label-md text-slate-800 font-semibold">2.4 MB</span>
+</div>
+</div>
+<div class="flex items-center gap-2 pt-2">
+<span class="material-symbols-outlined text-[18px] text-slate-400">auto_stories</span>
+<div>
+<span class="block font-label-sm text-label-sm text-slate-500">Pages</span>
+<span class="block font-label-md text-label-md text-slate-800 font-semibold">4 Scanned</span>
+</div>
+</div>
+<div class="flex items-center gap-2 pt-2">
+<span class="material-symbols-outlined text-[18px] text-slate-400">photo_size_select_large</span>
+<div>
+<span class="block font-label-sm text-label-sm text-slate-500">Density</span>
+<span class="block font-label-md text-label-md text-slate-800 font-semibold">300 DPI (Archival)</span>
+</div>
+</div>
+</div>
+<!-- Smart Tags -->
+<div class="space-y-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-slate-500 uppercase tracking-wider font-semibold">Classification Tags</span>
+<span class="font-label-sm text-label-sm text-emerald-700 font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">offline_bolt</span> Local Tags
+</span>
+</div>
+<div class="flex flex-wrap items-center gap-space-xs" id="tags-wrapper">
+<span class="px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-800 font-label-md text-label-md flex items-center gap-1.5 group">
+<span class="text-primary font-bold">#</span>tax
+          <button aria-label="Remove tax tag" class="text-slate-400 hover:text-red-600 transition-colors"><span class="material-symbols-outlined text-[14px]">cancel</span></button>
+</span>
+<span class="px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-800 font-label-md text-label-md flex items-center gap-1.5 group">
+<span class="text-primary font-bold">#</span>expenses
+          <button aria-label="Remove expenses tag" class="text-slate-400 hover:text-red-600 transition-colors"><span class="material-symbols-outlined text-[14px]">cancel</span></button>
+</span>
+<span class="px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-800 font-label-md text-label-md flex items-center gap-1.5 group">
+<span class="text-primary font-bold">#</span>2025
+          <button aria-label="Remove 2025 tag" class="text-slate-400 hover:text-red-600 transition-colors"><span class="material-symbols-outlined text-[14px]">cancel</span></button>
+</span>
+<button class="px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-primary hover:bg-emerald-100 font-label-md text-label-md flex items-center gap-1 transition-colors font-semibold" id="add-tag-btn">
+<span class="material-symbols-outlined text-[14px]">add</span>
+<span>Add Tag</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Page Management & Quality (Replaces OCR Section) -->
+<div class="bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+<!-- Header Banner -->
+<div class="p-space-md bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-emerald-100 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</div>
+<div>
+<span class="block font-headline-md text-[16px] text-slate-900 font-semibold">Page Management &amp; Quality</span>
+<span class="block font-label-sm text-label-sm text-slate-500">Optical profile • Offline compression engine</span>
+</div>
+</div>
+<button aria-label="Expand or collapse Quality settings" class="p-1 rounded-lg text-slate-400 hover:text-slate-800 transition-colors" id="toggle-mgmt">
+<span class="material-symbols-outlined text-[20px]" id="mgmt-chevron">expand_less</span>
+</button>
+</div>
+<!-- Quality Controls Content -->
+<div class="p-space-md space-y-space-md" id="mgmt-content">
+<!-- Resolution & Compression -->
+<div class="space-y-2">
+<div class="flex items-center justify-between">
+<label class="font-label-md text-label-md text-slate-700 font-semibold">Scan Resolution (DPI)</label>
+<span class="font-label-sm text-label-sm text-primary font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">300 DPI Archival</span>
+</div>
+<div class="grid grid-cols-3 gap-2">
+<button class="py-2 px-3 rounded-lg border border-slate-200 text-slate-600 font-label-md text-label-md hover:bg-slate-50 transition-colors text-center">
+        150 DPI
+        <span class="block text-[10px] text-slate-400 font-normal">Compact</span>
+</button>
+<button class="py-2 px-3 rounded-lg border-2 border-primary bg-emerald-50/70 text-primary font-label-md text-label-md transition-colors text-center font-bold">
+        300 DPI
+        <span class="block text-[10px] text-emerald-800 font-normal">Standard</span>
+</button>
+<button class="py-2 px-3 rounded-lg border border-slate-200 text-slate-600 font-label-md text-label-md hover:bg-slate-50 transition-colors text-center">
+        600 DPI
+        <span class="block text-[10px] text-slate-400 font-normal">Lossless</span>
+</button>
+</div>
+</div>
+<!-- Color Profile & Optimization -->
+<div class="space-y-2 pt-1 border-t border-slate-100">
+<label class="font-label-md text-label-md text-slate-700 font-semibold block">Color Profile Mode</label>
+<div class="grid grid-cols-3 gap-2">
+<button class="py-2 px-2.5 rounded-lg border border-slate-200 text-slate-700 font-label-md text-[11px] flex items-center justify-center gap-1.5 hover:bg-slate-50">
+<span class="material-symbols-outlined text-[16px] text-slate-500">contrast</span>
+<span>B&amp;W Doc</span>
+</button>
+<button class="py-2 px-2.5 rounded-lg border-2 border-primary bg-emerald-50/70 text-primary font-label-md text-[11px] flex items-center justify-center gap-1.5 font-bold">
+<span class="material-symbols-outlined text-[16px] text-primary">palette</span>
+<span>True Color</span>
+</button>
+<button class="py-2 px-2.5 rounded-lg border border-slate-200 text-slate-700 font-label-md text-[11px] flex items-center justify-center gap-1.5 hover:bg-slate-50">
+<span class="material-symbols-outlined text-[16px] text-slate-500">filter_b_and_w</span>
+<span>Grayscale</span>
+</button>
+</div>
+</div>
+<!-- Local Notes Area -->
+<div class="space-y-1.5 pt-1 border-t border-slate-100">
+<div class="flex items-center justify-between">
+<label class="font-label-md text-label-md text-slate-700 font-semibold" for="local-notes">Document Notes (Encrypted Locally)</label>
+<span class="font-label-sm text-label-sm text-slate-400">Offline Memo</span>
+</div>
+<textarea class="w-full text-body-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-primary focus:bg-white transition-colors resize-none placeholder:text-slate-400 font-sans" id="local-notes" placeholder="Add confidential notes, PO cross-references, or auditing memos..." rows="2">Standard Q4 Acme Corp hardware &amp; licensing disbursement invoice. Matched to PO #4920.</textarea>
+</div>
+</div>
+</div>
+<!-- Primary Bottom Action Panel -->
+<div class="bg-white p-space-md rounded-xl space-y-space-sm border border-slate-200 shadow-md">
+<div class="grid grid-cols-2 gap-space-sm">
+<!-- Export PDF Primary Button -->
+<button class="col-span-2 w-full h-12 rounded-lg bg-primary text-white hover:bg-emerald-800 font-headline-md text-[16px] font-semibold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.99]">
+<span class="material-symbols-outlined text-[22px]">picture_as_pdf</span>
+<span>Export Archival PDF</span>
+</button>
+<!-- Export JPG Button -->
+<button class="h-11 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 font-headline-md text-[14px] font-semibold flex items-center justify-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[20px] text-tertiary">image</span>
+<span>Export JPG</span>
+</button>
+<!-- Sign Document Button -->
+<button class="h-11 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 font-headline-md text-[14px] font-semibold flex items-center justify-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[20px] text-secondary">draw</span>
+<span>Sign Document</span>
+</button>
+</div>
+<!-- FaceID / Biometric Vault Lock Toggle -->
+<div class="pt-space-xs flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-lg">
+<div class="flex items-center gap-2.5">
+<div class="w-9 h-9 rounded-full bg-emerald-100 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[19px]">fingerprint</span>
+</div>
+<div>
+<span class="block font-headline-md text-[14px] font-semibold text-slate-900">Lock with FaceID</span>
+<span class="block font-label-sm text-label-sm text-slate-500">Encrypt and require biometrics</span>
+</div>
+</div>
+<button aria-checked="true" class="w-12 h-6 bg-primary rounded-full relative transition-colors cursor-pointer" id="biometric-toggle" role="switch">
+<span class="absolute top-1 right-1 w-4 h-4 rounded-full bg-white shadow-xs transition-transform"></span>
+</button>
+</div>
+</div>
+<!-- Folder Picker Modal Dialog (Hidden by Default) -->
+<div class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-margin hidden" id="folder-modal">
+<div class="w-full max-w-md bg-white rounded-t-2xl sm:rounded-xl p-space-md space-y-space-md shadow-2xl border border-slate-200">
+<div class="flex items-center justify-between pb-space-xs border-b border-slate-100">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[24px]">drive_file_move</span>
+<h2 class="font-headline-md text-[18px] font-semibold text-slate-900">Select Destination</h2>
+</div>
+<button class="p-1 text-slate-400 hover:text-slate-800 rounded-lg" id="close-folder-modal">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="space-y-space-xs max-h-60 overflow-y-auto">
+<button class="w-full folder-option flex items-center justify-between p-3 rounded-lg bg-emerald-50/70 border border-emerald-200 text-left transition-colors" data-folder="Tax &amp; Invoices / 2025 Q4">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">folder</span>
+<div>
+<span class="font-headline-md text-[14px] font-semibold text-slate-900 block">Tax &amp; Invoices / 2025 Q4</span>
+<span class="font-label-sm text-label-sm text-slate-500">18 Documents</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary text-[20px]">check</span>
+</button>
+<button class="w-full folder-option flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200 text-left hover:bg-slate-100 transition-colors" data-folder="Legal &amp; Corporate Contracts">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[20px]">folder</span>
+<div>
+<span class="font-headline-md text-[14px] font-semibold text-slate-900 block">Legal &amp; Contracts</span>
+<span class="font-label-sm text-label-sm text-slate-500">6 Documents</span>
+</div>
+</div>
+</button>
+<button class="w-full folder-option flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200 text-left hover:bg-slate-100 transition-colors" data-folder="Executive Payroll &amp; HR">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-tertiary text-[20px]">folder</span>
+<div>
+<span class="font-headline-md text-[14px] font-semibold text-slate-900 block">Payroll &amp; HR</span>
+<span class="font-label-sm text-label-sm text-slate-500">32 Documents</span>
+</div>
+</div>
+</button>
+<button class="w-full folder-option flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200 text-left hover:bg-slate-100 transition-colors" data-folder="Receipt Archive">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-slate-400 text-[20px]">folder</span>
+<div>
+<span class="font-headline-md text-[14px] font-semibold text-slate-900 block">Receipt Archive</span>
+<span class="font-label-sm text-label-sm text-slate-500">94 Documents</span>
+</div>
+</div>
+</button>
+</div>
+<button class="w-full py-2.5 rounded-lg bg-primary hover:bg-emerald-800 text-white font-headline-md text-[15px] font-semibold transition-colors" id="confirm-folder-btn">
+        Move Here
+      </button>
+</div>
+</div>
+</div>
+<script>
+  // Inline interactions
+  const filenameInput = document.getElementById('filename-input');
+  const editNameBtn = document.getElementById('edit-name-btn');
+  const favoriteBtn = document.getElementById('favorite-btn');
+  const toggleMgmtBtn = document.getElementById('toggle-mgmt');
+  const mgmtContent = document.getElementById('mgmt-content');
+  const mgmtChevron = document.getElementById('mgmt-chevron');
+  const openFolderPicker = document.getElementById('open-folder-picker');
+  const closeFolderModal = document.getElementById('close-folder-modal');
+  const folderModal = document.getElementById('folder-modal');
+  const confirmFolderBtn = document.getElementById('confirm-folder-btn');
+  const currentFolderText = document.getElementById('current-folder-text');
+  const folderOptions = document.querySelectorAll('.folder-option');
+  const biometricToggle = document.getElementById('biometric-toggle');
+  const addTagBtn = document.getElementById('add-tag-btn');
+  const tagsWrapper = document.getElementById('tags-wrapper');
+
+  // Edit filename
+  editNameBtn?.addEventListener('click', () => {
+    filenameInput.focus();
+    filenameInput.select();
+  });
+
+  // Favorite toggle
+  let isFav = false;
+  favoriteBtn?.addEventListener('click', () => {
+    isFav = !isFav;
+    favoriteBtn.classList.toggle('text-amber-500', isFav);
+    favoriteBtn.classList.toggle('border-amber-300', isFav);
+    favoriteBtn.classList.toggle('text-slate-500', !isFav);
+    favoriteBtn.classList.toggle('border-slate-200', !isFav);
+    favoriteBtn.querySelector('.material-symbols-outlined').style.fontVariationSettings = isFav ? "'FILL' 1" : "'FILL' 0";
+  });
+
+  // Quality Management Accordion toggle
+  toggleMgmtBtn?.addEventListener('click', () => {
+    const isHidden = mgmtContent.classList.toggle('hidden');
+    mgmtChevron.textContent = isHidden ? 'expand_more' : 'expand_less';
+  });
+
+  // Folder Modal
+  let selectedFolder = 'Tax & Invoices / 2025 Q4';
+  openFolderPicker?.addEventListener('click', () => {
+    folderModal.classList.remove('hidden');
+  });
+
+  closeFolderModal?.addEventListener('click', () => {
+    folderModal.classList.add('hidden');
+  });
+
+  folderOptions.forEach(opt => {
+    opt.addEventListener('click', () => {
+      folderOptions.forEach(o => {
+        o.classList.remove('bg-emerald-50/70', 'border-emerald-200');
+        o.classList.add('bg-slate-50', 'border-slate-200');
+        const check = o.querySelector('.material-symbols-outlined:last-child');
+        if (check && check.textContent === 'check') check.remove();
+      });
+      opt.classList.remove('bg-slate-50', 'border-slate-200');
+      opt.classList.add('bg-emerald-50/70', 'border-emerald-200');
+      
+      const checkIcon = document.createElement('span');
+      checkIcon.className = 'material-symbols-outlined text-primary text-[20px]';
+      checkIcon.textContent = 'check';
+      opt.appendChild(checkIcon);
+
+      selectedFolder = opt.getAttribute('data-folder');
+    });
+  });
+
+  confirmFolderBtn?.addEventListener('click', () => {
+    currentFolderText.textContent = selectedFolder;
+    folderModal.classList.add('hidden');
+  });
+
+  // Biometric switch
+  let isBiometricOn = true;
+  biometricToggle?.addEventListener('click', () => {
+    isBiometricOn = !isBiometricOn;
+    biometricToggle.setAttribute('aria-checked', isBiometricOn.toString());
+    const knob = biometricToggle.querySelector('span');
+    if (isBiometricOn) {
+      biometricToggle.classList.replace('bg-slate-300', 'bg-primary');
+      knob.classList.remove('left-1');
+      knob.classList.add('right-1');
+    } else {
+      biometricToggle.classList.replace('bg-primary', 'bg-slate-300');
+      knob.classList.remove('right-1');
+      knob.classList.add('left-1');
+    }
+  });
+
+  // Dynamic Add Tag prompt
+  addTagBtn?.addEventListener('click', () => {
+    const tagName = prompt('Enter a new document tag (e.g. audit):');
+    if (tagName && tagName.trim()) {
+      const cleanTag = tagName.trim().replace(/^#/, '');
+      const tagPill = document.createElement('span');
+      tagPill.className = 'px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-800 font-label-md text-label-md flex items-center gap-1.5';
+      tagPill.innerHTML = `<span class="text-primary font-bold">#</span>${cleanTag}<button class="text-slate-400 hover:text-red-600 transition-colors" onclick="this.parentElement.remove()"><span class="material-symbols-outlined text-[14px]">cancel</span></button>`;
+      tagsWrapper.insertBefore(tagPill, addTagBtn);
+    }
+  });
+</script></main></body></html>

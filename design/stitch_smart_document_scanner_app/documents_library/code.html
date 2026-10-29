@@ -1,0 +1,511 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"><meta content="mobile_tab" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "tertiary-container": "#007bb9",
+          "surface-variant": "#dae2fd",
+          "on-tertiary-container": "#fdfcff",
+          "tertiary-fixed": "#cce5ff",
+          "surface-container-lowest": "#ffffff",
+          "on-tertiary": "#ffffff",
+          "surface-bright": "#faf8ff",
+          "on-primary-container": "#f5fff7",
+          "surface-tint": "#006c4a",
+          "primary-fixed": "#8af8c5",
+          "surface-container-low": "#f8fafc",
+          "error-container": "#ffdad6",
+          "outline-variant": "#e2e8f0",
+          "primary-container": "#0a8f64",
+          "on-secondary-fixed": "#00201d",
+          "on-secondary-fixed-variant": "#00504a",
+          "on-error-container": "#93000a",
+          "surface-container": "#ffffff",
+          "on-error": "#ffffff",
+          "surface": "#f8fafc",
+          "surface-container-highest": "#f1f5f9",
+          "inverse-primary": "#6ddbaa",
+          "inverse-surface": "#0f172a",
+          "tertiary-fixed-dim": "#93ccff",
+          "on-surface-variant": "#475569",
+          "on-tertiary-fixed": "#001d31",
+          "outline": "#94a3b8",
+          "inverse-on-surface": "#f8fafc",
+          "on-surface": "#0f172a",
+          "secondary-fixed": "#9cf2e8",
+          "on-secondary": "#ffffff",
+          "secondary": "#006a63",
+          "error": "#ba1a1a",
+          "on-background": "#0f172a",
+          "secondary-container": "#e6fffa",
+          "on-tertiary-fixed-variant": "#004b73",
+          "primary": "#0a8f64",
+          "surface-dim": "#e2e8f0",
+          "background": "#f8fafc",
+          "on-primary-fixed-variant": "#005237",
+          "secondary-fixed-dim": "#80d5cb",
+          "tertiary": "#0284c7",
+          "surface-container-high": "#f1f5f9",
+          "primary-fixed-dim": "#6ddbaa",
+          "on-primary": "#ffffff",
+          "on-primary-fixed": "#002114",
+          "on-secondary-container": "#006f67"
+        },
+        borderRadius: {
+          "DEFAULT": "0.25rem",
+          "lg": "0.5rem",
+          "xl": "0.75rem",
+          "full": "9999px"
+        },
+        spacing: {
+          "space-xs": "0.25rem",
+          "space-md": "1rem",
+          "space-xl": "2rem",
+          "margin-tablet": "1.5rem",
+          "gutter-desktop": "1.5rem",
+          "margin": "1rem",
+          "margin-desktop": "2.5rem",
+          "space-lg": "1.5rem",
+          "gutter": "1rem",
+          "space-sm": "0.5rem"
+        },
+        fontFamily: {
+          "label-lg": ["Space Grotesk"],
+          "label-md": ["Space Grotesk"],
+          "display-lg": ["Space Grotesk"],
+          "headline-lg-mobile": ["Space Grotesk"],
+          "headline-lg": ["Space Grotesk"],
+          "headline-sm": ["Space Grotesk"],
+          "body-lg": ["Inter"],
+          "body-sm": ["Inter"],
+          "label-sm": ["Space Grotesk"],
+          "body-md": ["Inter"],
+          "headline-md": ["Space Grotesk"]
+        },
+        fontSize: {
+          "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+          "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+          "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+          "headline-lg-mobile": ["26px", { "lineHeight": "34px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+          "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+          "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+          "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+          "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+          "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }],
+          "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+          "headline-md": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+        }
+      }
+    }
+  };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head><body class="bg-background text-on-surface font-body-md text-body-md antialiased min-h-screen flex flex-col"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/90 backdrop-blur-xl border-b border-outline-variant shadow-sm"><div class="h-16 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20"><span class="material-symbols-outlined text-[22px]">document_scanner</span></div><div class="flex flex-col"><span class="font-headline-md text-headline-md tracking-tight text-on-surface font-bold">ScanCraft</span><span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">Offline Vault</span></div></div><div class="flex items-center gap-space-sm"><button aria-label="Search documents" class="w-10 h-10 flex items-center justify-center rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-[22px]">search</span></button><div class="relative"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-outline-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0RnlwTmE9N95W0v8HjEKdkvMZ2grAkq9nztgjeF6VpBt7kkNhNLHgjL3bOQ4-XENObET6ZG4FUgbVY4kzyYx_9tHasN_waaDsmLpT1wyheq1OypGyFOJKNYFvkQYjWRkWTpvXh4tKbg2RWOf6E1wgEOnq_3nsiL6zQUfdOS9i45lxuZ0z0pvV5_U2OFN3e6VexNObWoWJys8s5kniBU-m-YVu40nKb7_w6dyKOQY"><span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-primary border-2 border-white" title="Offline Protected"></span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-24 bg-surface"><div class="flex flex-col w-full px-margin pb-6 gap-y-6">
+<!-- Interactive Search & Live Filter Chips -->
+<section class="flex flex-col gap-3 pt-3">
+<div class="relative w-full">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="w-full h-11 pl-10 pr-10 bg-surface-container-lowest border border-outline-variant rounded-xl text-on-surface font-body-md text-body-md placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm" id="docSearchInput" placeholder="Search documents, tags, names..." type="text">
+<button aria-label="Filter or tune search" class="absolute inset-y-0 right-0 pr-3 flex items-center text-outline hover:text-primary transition-colors" id="clearSearchBtn" type="button">
+<span class="material-symbols-outlined text-[20px]">tune</span>
+</button>
+</div>
+<!-- Filter Chips Horizontal Scroll -->
+<div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none" id="filterChipContainer">
+<button class="filter-chip px-3.5 py-1.5 rounded-full font-label-sm text-label-sm bg-primary text-on-primary font-semibold shadow-sm transition-all whitespace-nowrap active:scale-95 flex items-center gap-1.5" data-filter="all" type="button">
+<span class="material-symbols-outlined text-[14px]">done</span>All
+      </button>
+<button class="filter-chip px-3.5 py-1.5 rounded-full font-label-sm text-label-sm bg-surface-container-lowest border border-outline-variant text-on-surface-variant hover:text-on-surface hover:border-outline transition-all whitespace-nowrap active:scale-95 flex items-center gap-1.5 shadow-xs" data-filter="pdf" type="button">
+<span class="material-symbols-outlined text-[14px]">picture_as_pdf</span>PDFs
+      </button>
+<button class="filter-chip px-3.5 py-1.5 rounded-full font-label-sm text-label-sm bg-surface-container-lowest border border-outline-variant text-on-surface-variant hover:text-on-surface hover:border-outline transition-all whitespace-nowrap active:scale-95 flex items-center gap-1.5 shadow-xs" data-filter="images" type="button">
+<span class="material-symbols-outlined text-[14px]">image</span>Images
+      </button>
+<button class="filter-chip px-3.5 py-1.5 rounded-full font-label-sm text-label-sm bg-surface-container-lowest border border-outline-variant text-on-surface-variant hover:text-on-surface hover:border-outline transition-all whitespace-nowrap active:scale-95 flex items-center gap-1.5 shadow-xs" data-filter="starred" type="button">
+<span class="material-symbols-outlined text-[14px]">star</span>Starred
+      </button>
+<button class="filter-chip px-3.5 py-1.5 rounded-full font-label-sm text-label-sm bg-surface-container-lowest border border-outline-variant text-on-surface-variant hover:text-on-surface hover:border-outline transition-all whitespace-nowrap active:scale-95 flex items-center gap-1.5 shadow-xs" data-filter="id-cards" type="button">
+<span class="material-symbols-outlined text-[14px]">badge</span>ID Cards
+      </button>
+</div>
+</section>
+<!-- 100% Offline Secure Storage Capacity Widget -->
+<section class="w-full bg-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-sm relative overflow-hidden">
+<div class="flex items-center justify-between mb-2.5">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">phonelink_lock</span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="font-headline-md text-headline-md text-on-surface text-[15px] font-bold block leading-tight">Offline Local Vault</span>
+<span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 text-[10px] font-semibold tracking-wide uppercase">Offline</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">100% Offline • Zero Cloud Sync • On-Device Encrypted</span>
+</div>
+</div>
+<button class="font-label-sm text-label-sm text-primary hover:underline font-semibold flex items-center gap-0.5 shrink-0" type="button">
+        Manage<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+</button>
+</div>
+<!-- Progress Track & Metrics -->
+<div class="space-y-1.5 bg-slate-50 border border-slate-100 rounded-lg p-2.5">
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-on-surface-variant"><strong class="text-on-surface font-semibold">4.2 GB</strong> used in Local Vault</span>
+<span class="text-on-surface-variant font-medium">128 GB On-Device</span>
+</div>
+<div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden flex shadow-inner">
+<div class="h-full bg-primary rounded-full transition-all duration-700" style="width: 28%;"></div>
+<div class="h-full bg-sky-500 rounded-full -ml-0.5" style="width: 7%;"></div>
+</div>
+<div class="flex items-center gap-3 pt-0.5 font-label-sm text-label-sm text-slate-500 text-[11px]">
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-primary inline-block"></span>Scanned Docs (3.2 GB)</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-sky-500 inline-block"></span>Secure Archives (1.0 GB)</span>
+</div>
+</div><div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2"><div class="flex items-center gap-2 min-w-0"><div class="w-7 h-7 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center text-tertiary shrink-0"><span class="material-symbols-outlined text-[16px]">add_to_drive</span></div><div class="flex flex-col min-w-0"><div class="flex items-center gap-1.5"><span class="font-label-sm text-[12px] font-semibold text-on-surface truncate">Google Drive Backup</span><span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-500 font-label-sm text-[9px] font-medium">Optional</span></div><span class="font-label-sm text-[10px] text-slate-500 truncate">Offline by default • Link on-demand</span></div></div><button class="px-2.5 py-1 rounded-lg bg-surface-container-lowest hover:bg-slate-100 border border-outline-variant font-label-sm text-label-sm text-primary hover:border-primary/40 font-semibold flex items-center gap-1 shrink-0 transition-all active:scale-95 shadow-xs" type="button"><span class="material-symbols-outlined text-[14px]">cloud_upload</span><span class="">Link Drive</span></button></div>
+</section>
+<!-- Folder Grid Section -->
+<section class="flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-headline-md text-on-surface font-bold">Directories</span>
+<span class="px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 font-label-sm text-label-sm text-primary font-semibold">4 Vaults</span>
+</div>
+<button class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors flex items-center gap-0.5 font-semibold" type="button">
+        View All<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<!-- Folder 1: Work Contracts -->
+<div class="bg-surface-container-lowest border border-outline-variant p-3.5 rounded-xl shadow-xs hover:border-primary/40 hover:shadow-sm transition-all active:scale-[0.98] cursor-pointer flex flex-col justify-between h-28 group">
+<div class="flex items-start justify-between">
+<div class="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-100 group-hover:bg-emerald-100 flex items-center justify-center text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">folder</span>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-on-surface text-[18px]">more_vert</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface text-[14px] truncate leading-snug font-bold">Work Contracts</h2>
+<span class="font-label-sm text-label-sm text-slate-500">8 files • 24.8 MB</span>
+</div>
+</div>
+<!-- Folder 2: Tax & Invoices -->
+<div class="bg-surface-container-lowest border border-outline-variant p-3.5 rounded-xl shadow-xs hover:border-primary/40 hover:shadow-sm transition-all active:scale-[0.98] cursor-pointer flex flex-col justify-between h-28 group">
+<div class="flex items-start justify-between">
+<div class="w-9 h-9 rounded-lg bg-teal-50 border border-teal-100 group-hover:bg-teal-100 flex items-center justify-center text-secondary transition-colors">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-on-surface text-[18px]">more_vert</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface text-[14px] truncate leading-snug font-bold">Tax &amp; Invoices</h2>
+<span class="font-label-sm text-label-sm text-slate-500">14 files • 56.1 MB</span>
+</div>
+</div>
+<!-- Folder 3: Identity & Passports (Biometric Locked) -->
+<div class="bg-surface-container-lowest border border-outline-variant p-3.5 rounded-xl shadow-xs hover:border-primary/40 hover:shadow-sm transition-all active:scale-[0.98] cursor-pointer flex flex-col justify-between h-28 group relative">
+<div class="flex items-start justify-between">
+<div class="w-9 h-9 rounded-lg bg-sky-50 border border-sky-100 group-hover:bg-sky-100 flex items-center justify-center text-tertiary transition-colors">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">lock</span>
+</div>
+<div class="flex items-center gap-1 text-slate-400 group-hover:text-on-surface">
+<span class="w-2 h-2 rounded-full bg-primary" title="Biometric Shield active"></span>
+<span class="material-symbols-outlined text-[18px]">fingerprint</span>
+</div>
+</div>
+<div>
+<div class="flex items-center gap-1">
+<h2 class="font-headline-md text-headline-md text-on-surface text-[14px] truncate leading-snug font-bold">Identity &amp; Passports</h2>
+</div>
+<span class="font-label-sm text-label-sm text-slate-500">4 files • Locked Vault</span>
+</div>
+</div>
+<!-- Folder 4: Medical Records -->
+<div class="bg-surface-container-lowest border border-outline-variant p-3.5 rounded-xl shadow-xs hover:border-primary/40 hover:shadow-sm transition-all active:scale-[0.98] cursor-pointer flex flex-col justify-between h-28 group">
+<div class="flex items-start justify-between">
+<div class="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-100 group-hover:bg-emerald-100 flex items-center justify-center text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-on-surface text-[18px]">more_vert</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface text-[14px] truncate leading-snug font-bold">Medical Records</h2>
+<span class="font-label-sm text-label-sm text-slate-500">6 files • 18.2 MB</span>
+</div>
+</div>
+<!-- Action Card: + New Folder -->
+<button class="col-span-2 bg-slate-50 hover:bg-slate-100 border border-dashed border-slate-300 transition-all active:scale-[0.99] p-3 rounded-xl flex items-center justify-center gap-2 text-primary font-body-md text-body-md" type="button">
+<span class="material-symbols-outlined text-[20px]">create_new_folder</span>
+<span class="font-semibold text-slate-800">+ New Folder</span>
+</button>
+</div>
+</section>
+<!-- Recent Scans Section -->
+<section class="flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-headline-md text-on-surface font-bold">Recent Scans</span>
+<span class="font-label-sm text-label-sm text-slate-500 font-medium">Sorted by newest</span>
+</div>
+<div class="flex items-center gap-1 bg-surface-container-highest border border-outline-variant rounded-lg p-0.5">
+<button aria-label="List view" class="p-1 rounded bg-surface-container-lowest text-primary shadow-xs" type="button">
+<span class="material-symbols-outlined text-[18px] block">format_list_bulleted</span>
+</button>
+<button aria-label="Grid view" class="p-1 rounded text-outline hover:text-on-surface transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px] block">grid_view</span>
+</button>
+</div>
+</div>
+<!-- Document List Stack -->
+<div class="flex flex-col gap-3" id="recentDocsList">
+<!-- Item 1: Master Services Agreement -->
+<article class="w-full bg-surface-container-lowest border border-outline-variant rounded-xl p-3.5 shadow-xs flex items-start gap-3 hover:border-slate-300 transition-all relative group">
+<!-- Thumbnail Preview Container -->
+<div class="relative w-16 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100 border border-slate-200">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Monochrome scanned legal consulting contract document showing neatly aligned dark typography clauses, signature box and official blue stamp corner on pristine textured paper sheet" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDe8U3Dvc1Pi-lLGlDG-0u617HFClhwPBWa5AFqKkUwYqZdmaUzUzFitXb22BQeKvftw_2j-_hbDiq4IBKkz2Eln3a7a7WE_kORoB6FlA0azYd10wDETx7U4sE2QTN8ucTFU0bWnh_GXRxr8FjTs8J8UgvqEv0Bf0NRKlYiarxq8s6rbPst8u0GEjsAjQJtcsmN4myXWF0eYZ7TnqPyqkRtoOKk7b9Ui0OK4rxc-AM">
+<span class="absolute bottom-1 right-1 px-1 py-0.2 rounded bg-slate-900/80 font-label-sm text-[9px] text-white font-semibold">
+            PDF
+          </span>
+</div>
+<!-- Document Details -->
+<div class="flex-1 min-w-0 flex flex-col justify-between h-20">
+<div>
+<div class="flex items-start justify-between gap-1">
+<h3 class="font-headline-md text-headline-md text-on-surface text-[14px] truncate leading-tight font-bold">Master Services Agreement 2024</h3>
+<!-- Quick Three-Dot Menu Button -->
+<button aria-label="Options for Master Services Agreement" class="doc-menu-btn text-outline hover:text-primary p-1 -mr-1.5 -mt-1 rounded transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<p class="font-label-sm text-label-sm text-slate-500 mt-0.5 truncate font-normal">Legal • Acme Corp • Signed</p>
+</div>
+<!-- Bottom Metadata & Status Tag -->
+<div class="flex items-center justify-between flex-wrap gap-1 mt-auto">
+<div class="flex items-center gap-1.5 font-label-sm text-label-sm text-slate-500">
+<span class="">3 Pages</span>
+<span class="">•</span>
+<span class="">1.4 MB</span>
+<span class="">•</span>
+<span class="text-slate-700 font-medium">Today, 10:42 AM</span>
+</div>
+<!-- High Resolution Badge (Replaced OCR) -->
+<div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-primary font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[12px]">high_density</span>
+              300 DPI • PDF
+            </div>
+</div>
+</div>
+</article>
+<!-- Item 2: Cloud Server Invoice -->
+<article class="w-full bg-surface-container-lowest border border-outline-variant rounded-xl p-3.5 shadow-xs flex items-start gap-3 hover:border-slate-300 transition-all relative group">
+<!-- Thumbnail Preview Container -->
+<div class="relative w-16 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100 border border-slate-200">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Top-down crisp scan of a modern tech invoice receipt with line items for server hosting fees, subtotal calculation, and barcode header printed on slightly off-white invoice parchment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDcxN8KTH9ga6xn6kuB9x96W49EHLk3hz1UqL8P8IKsOgKKlT9mfbWTRB05gysDIlVHZRw2UnThNQN7aFJnZZKBkvbwnHMx5butHpN0CNdg0NShqMmffuQUyVkDT-7Tg8z6UaE5ozUAhzlm8-8cvUVQG_ShkXnl9uKNSqntNobgX1WNAaoOF4DBlnzKEwBy0MkBSRbz-SvIIEV_nR1QhKKao0qQQ_h0xZghZf6qWLw">
+<span class="absolute bottom-1 right-1 px-1 py-0.2 rounded bg-slate-900/80 font-label-sm text-[9px] text-white font-semibold">
+            PDF
+          </span>
+</div>
+<!-- Document Details -->
+<div class="flex-1 min-w-0 flex flex-col justify-between h-20">
+<div>
+<div class="flex items-start justify-between gap-1">
+<h3 class="font-headline-md text-headline-md text-on-surface text-[14px] truncate leading-tight font-bold">AWS Cloud Server Invoice #8821</h3>
+<button aria-label="Options for Cloud Invoice" class="doc-menu-btn text-outline hover:text-primary p-1 -mr-1.5 -mt-1 rounded transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<p class="font-label-sm text-label-sm text-slate-500 mt-0.5 truncate font-normal">Tax &amp; Expenses • USD $342.50</p>
+</div>
+<!-- Bottom Metadata & Status Tag -->
+<div class="flex items-center justify-between flex-wrap gap-1 mt-auto">
+<div class="flex items-center gap-1.5 font-label-sm text-label-sm text-slate-500">
+<span class="">1 Page</span>
+<span class="">•</span>
+<span class="">420 KB</span>
+<span class="">•</span>
+<span class="text-slate-700 font-medium">Yesterday</span>
+</div>
+<!-- Spec Badge (Replaced OCR) -->
+<div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-primary font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[12px]">verified</span>
+              Clean Scan
+            </div>
+</div>
+</div>
+</article>
+<!-- Item 3: Clinical Diagnostic Summary -->
+<article class="w-full bg-surface-container-lowest border border-outline-variant rounded-xl p-3.5 shadow-xs flex items-start gap-3 hover:border-slate-300 transition-all relative group">
+<!-- Thumbnail Preview Container -->
+<div class="relative w-16 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100 border border-slate-200">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="High resolution scan of clinical diagnostic laboratory bloodwork report with lab header logo, medical numerical metrics table, and physician ink validation mark on paper" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQNob6uI-LdHr8r04THxFvyTU1vrrJbj0KsMxDzIebQc6h6M3Ok4yhUuCp1xJvfaGs5AQRizjp9Uyn-UkexGtWHZDZ3qYgWaUzkibxyCxROQxJQhpndzDf34JM8zmlteUfSvLYYwGB13UTD7nfxqFkMROmnCi77eeoV62dDcfNL-uzN3Q7wWUqw9Gz3T722yORuDAW_gQKMJ3-2ajE9fm2wnOYFRMyvMjD2AzHIJY">
+<span class="absolute bottom-1 right-1 px-1 py-0.2 rounded bg-slate-900/80 font-label-sm text-[9px] text-white font-semibold">
+            PDF
+          </span>
+</div>
+<!-- Document Details -->
+<div class="flex-1 min-w-0 flex flex-col justify-between h-20">
+<div>
+<div class="flex items-start justify-between gap-1">
+<h3 class="font-headline-md text-headline-md text-on-surface text-[14px] truncate leading-tight font-bold">Diagnostic Summary &amp; Vitals</h3>
+<button aria-label="Options for Diagnostic Summary" class="doc-menu-btn text-outline hover:text-primary p-1 -mr-1.5 -mt-1 rounded transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<p class="font-label-sm text-label-sm text-slate-500 mt-0.5 truncate font-normal">Medical Records • Dr. Jensen</p>
+</div>
+<!-- Bottom Metadata & Status Tag -->
+<div class="flex items-center justify-between flex-wrap gap-1 mt-auto">
+<div class="flex items-center gap-1.5 font-label-sm text-label-sm text-slate-500">
+<span class="">2 Pages</span>
+<span class="">•</span>
+<span class="">2.1 MB</span>
+<span class="">•</span>
+<span class="text-slate-700 font-medium">May 12</span>
+</div>
+<!-- Spec Badge (Replaced OCR) -->
+<div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-primary font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[12px]">high_density</span>
+              300 DPI • Color
+            </div>
+</div>
+</div>
+</article>
+</div>
+</section>
+<!-- Studio Action Trigger Floating Pill Bar -->
+<div class="sticky bottom-20 z-40 w-full flex items-center justify-center pointer-events-none mt-2">
+<div class="pointer-events-auto bg-white/95 backdrop-blur-xl border border-slate-200/90 rounded-full p-1.5 shadow-[0_8px_30px_rgba(15,23,42,0.12)] flex items-center gap-2">
+<!-- Quick Import Button -->
+<button class="h-11 px-4 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-on-surface transition-all flex items-center gap-2 font-label-sm text-label-sm active:scale-95 font-semibold" type="button">
+<span class="material-symbols-outlined text-[18px]">upload_file</span>
+<span class="">Import File</span>
+</button>
+<!-- Prominent Instant Scan Shutter FAB Trigger -->
+<button class="h-11 px-5 rounded-full bg-primary text-on-primary font-headline-md text-headline-md text-[14px] font-semibold flex items-center gap-2 shadow-[0_4px_16px_rgba(10,143,100,0.35)] hover:bg-[#087854] transition-all active:scale-95 group" id="quickScanTrigger" type="button">
+<span class="material-symbols-outlined text-[20px] group-hover:rotate-12 transition-transform">photo_camera</span>
+<span class="tracking-tight">Quick Scan</span>
+</button>
+</div>
+</div>
+<!-- Reusable Context Modal Bottom Sheet (Client-Side Interactive) -->
+<div class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs hidden flex-col justify-end p-margin pb-safe transition-opacity" id="contextModal">
+<div class="w-full bg-white rounded-2xl p-4 shadow-2xl border border-slate-200 flex flex-col gap-2 max-w-md mx-auto">
+<div class="flex items-center justify-between pb-2 border-b border-slate-100">
+<div class="flex items-center gap-2">
+<div class="w-2.5 h-2.5 rounded-full bg-primary"></div>
+<span class="font-headline-md text-headline-md text-on-surface text-[15px] font-bold" id="modalDocTitle">Document Actions</span>
+</div>
+<button class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-800 transition-colors" id="closeModalBtn" type="button">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+<div class="flex flex-col gap-1 text-on-surface font-body-md text-body-md">
+<button class="w-full p-2.5 rounded-xl hover:bg-slate-100 transition-colors flex items-center gap-3 text-left font-medium" type="button">
+<span class="material-symbols-outlined text-primary text-[20px]">edit</span>
+<span class="">Rename Document</span>
+</button>
+<button class="w-full p-2.5 rounded-xl hover:bg-slate-100 transition-colors flex items-center gap-3 text-left font-medium" type="button">
+<span class="material-symbols-outlined text-primary text-[20px]">drive_file_move</span>
+<span class="">Move to Folder...</span>
+</button>
+<button class="w-full p-2.5 rounded-xl hover:bg-slate-100 transition-colors flex items-center gap-3 text-left font-medium" type="button">
+<span class="material-symbols-outlined text-primary text-[20px]">share</span>
+<span class="">Export / Save PDF</span>
+</button>
+<button class="w-full p-2.5 rounded-xl hover:bg-slate-100 transition-colors flex items-center gap-3 text-left font-medium" type="button">
+<span class="material-symbols-outlined text-primary text-[20px]">print</span>
+<span class="">Print Document</span>
+</button><button class="w-full p-2.5 rounded-xl hover:bg-slate-100 transition-colors flex items-center justify-between text-left font-medium" type="button"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-tertiary text-[20px]">add_to_drive</span><span class="">Upload copy to Google Drive</span></div><span class="px-1.5 py-0.5 rounded bg-sky-50 text-tertiary font-label-sm text-[10px] font-semibold border border-sky-100">Backup</span></button>
+<button class="w-full p-2.5 rounded-xl hover:bg-red-50 text-red-600 transition-colors flex items-center gap-3 text-left mt-1 font-medium" type="button">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+<span class="">Delete Scan</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    // Filter chip toggle behavior
+    const chips = document.querySelectorAll('.filter-chip');
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        chips.forEach(c => {
+          c.classList.remove('bg-primary', 'text-on-primary', 'font-semibold');
+          c.classList.add('bg-surface-container-lowest', 'border', 'border-outline-variant', 'text-on-surface-variant');
+          const checkIcon = c.querySelector('.material-symbols-outlined');
+          if (c.dataset.filter === 'all' && checkIcon) {
+            checkIcon.textContent = 'folder_open';
+          }
+        });
+
+        chip.classList.remove('bg-surface-container-lowest', 'border', 'border-outline-variant', 'text-on-surface-variant');
+        chip.classList.add('bg-primary', 'text-on-primary', 'font-semibold');
+        const activeIcon = chip.querySelector('.material-symbols-outlined');
+        if (chip.dataset.filter === 'all' && activeIcon) {
+          activeIcon.textContent = 'done';
+        }
+      });
+    });
+
+    // Context Action Modal Handling
+    const contextModal = document.getElementById('contextModal');
+    const modalTitle = document.getElementById('modalDocTitle');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const menuButtons = document.querySelectorAll('.doc-menu-btn');
+
+    menuButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const article = btn.closest('article');
+        const heading = article ? article.querySelector('h3') : null;
+        if (heading && modalTitle) {
+          modalTitle.textContent = heading.textContent.trim();
+        }
+        if (contextModal) {
+          contextModal.classList.remove('hidden');
+          contextModal.classList.add('flex');
+        }
+      });
+    });
+
+    if (closeModalBtn && contextModal) {
+      closeModalBtn.addEventListener('click', () => {
+        contextModal.classList.add('hidden');
+        contextModal.classList.remove('flex');
+      });
+
+      contextModal.addEventListener('click', (e) => {
+        if (e.target === contextModal) {
+          contextModal.classList.add('hidden');
+          contextModal.classList.remove('flex');
+        }
+      });
+    }
+
+    // Quick search filter interaction
+    const searchInput = document.getElementById('docSearchInput');
+    const docItems = document.querySelectorAll('#recentDocsList article');
+
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        docItems.forEach(item => {
+          const text = item.textContent.toLowerCase();
+          if (text.includes(query)) {
+            item.classList.remove('hidden');
+          } else {
+            item.classList.add('hidden');
+          }
+        });
+      });
+    }
+  })();
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container-lowest/95 backdrop-blur-xl border-t border-outline-variant shadow-md" data-active-classes="text-primary"><div class="relative flex items-center justify-between h-16 px-space-sm max-w-md mx-auto"><div class="flex items-center justify-around flex-1"><a aria-current="page" class="flex flex-col items-center justify-center min-w-[56px] h-12 transition-colors text-primary font-medium" data-path="documents" href="#"><span class="material-symbols-outlined text-[22px]">folder</span><span class="font-label-sm text-label-sm mt-space-xs">Documents</span></a><a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-on-surface-variant hover:text-on-surface transition-colors font-medium" data-path="batch-scans" href="#"><span class="material-symbols-outlined text-[22px]">filter_none</span><span class="font-label-sm text-label-sm mt-space-xs">Batch</span></a></div><div class="relative flex items-center justify-center px-space-xs -top-4"><a class="flex items-center justify-center w-14 h-14 rounded-full bg-primary text-on-primary shadow-[0_6px_20px_rgba(10,143,100,0.4)] hover:bg-[#087854] transition-transform active:scale-95 border-2 border-white" data-path="camera-viewfinder" href="#"><span class="material-symbols-outlined text-[28px]">photo_camera</span></a></div><div class="flex items-center justify-around flex-1"><a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-on-surface-variant hover:text-on-surface transition-colors font-medium" data-path="local-vault" href="#"><span class="material-symbols-outlined text-[22px]">phonelink_lock</span><span class="font-label-sm text-label-sm mt-space-xs">Storage</span></a><a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-on-surface-variant hover:text-on-surface transition-colors font-medium" data-path="settings" href="#"><span class="material-symbols-outlined text-[22px]">settings</span><span class="font-label-sm text-label-sm mt-space-xs">Settings</span></a></div></div></nav>
+
+</body></html>
