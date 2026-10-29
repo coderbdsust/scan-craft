@@ -42,6 +42,10 @@ dependencies:
 
   # Pure-Dart pixel processing: crop/perspective, filters, deskew
   image: ^4.2.1
+  pdf: ^3.13.1
+  share_plus: ^13.3.1
+  local_auth: ^3.0.2
+  mobile_scanner: ^7.4.2
 
 dev_dependencies:
   flutter_test:
@@ -53,6 +57,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -116,3 +121,8 @@ flutter:
           weight: 600
         - asset: fonts/SpaceGrotesk-Bold.ttf
           weight: 700
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icons/app_icon.png"

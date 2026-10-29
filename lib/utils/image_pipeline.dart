@@ -21,7 +21,7 @@ class PipelineRequest {
     required this.shadowRemoval, // 0..1
     required this.contrast, // 0..1
     required this.filterIndex,
-    required this.strokes, // each = [x,y,radius] normalized to OUTPUT rect 0..1
+    required this.strokes, // each = [x,y,radius] normalized to the SOURCE frame 0..1
     required this.deskew,
     required this.rotateQuads, // extra 90-degree turns after deskew
     required this.maxOutDim,
@@ -74,9 +74,20 @@ img.Image runPipeline(PipelineRequest req) {
     src = img.copyResize(src, width: (src.width * scale).round());
   }
 
-  // 1. Perspective crop from normalized corners.
   final w = src.width.toDouble();
   final h = src.height.toDouble();
+
+  // 0. Finger eraser strokes, painted on the source frame where the user
+  // tapped them (before the perspective warp moves pixels around).
+  if (req.strokes.isNotEmpty) {
+    src = img.Image.from(src);
+    for (final s in req.strokes) {
+      _paintWhiteCircle(src, (s[0] * w).round(), (s[1] * h).round(),
+          (s[2] * math.max(w, h)).round().clamp(4, 400));
+    }
+  }
+
+  // 1. Perspective crop from normalized corners.
   final c = req.corners;
   final tl = _Pt(c[0] * w, c[1] * h);
   final tr = _Pt(c[2] * w, c[3] * h);
@@ -114,16 +125,6 @@ img.Image runPipeline(PipelineRequest req) {
   // 6. Dynamic contrast.
   if (req.contrast > 0.01) {
     _adjustContrast(out, req.contrast);
-  }
-
-  // 7. Finger eraser strokes (normalized to output rect).
-  if (req.strokes.isNotEmpty) {
-    final rw = out.width.toDouble();
-    final rh = out.height.toDouble();
-    for (final s in req.strokes) {
-      _paintWhiteCircle(out, (s[0] * rw).round(), (s[1] * rh).round(),
-          (s[2] * math.max(rw, rh)).round().clamp(4, 400));
-    }
   }
 
   return out;
@@ -398,6 +399,278 @@ void _paintWhiteCircle(img.Image image, int cx, int cy, int radius) {
       image.setPixelRgba(px, py, 255, 255, 255, 255);
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Editor preview + export rendering (both run inside compute)
+// ---------------------------------------------------------------------------
+
+/// Decodes a page, returns a downscaled JPEG preview, its aspect ratio and the
+/// detected document corners (or null when no page outline was found).
+Map<String, dynamic> loadPreviewIsolate(Uint8List bytes) {
+  final decoded = img.decodeImage(bytes);
+  if (decoded == null) throw const FormatException('Unsupported image format');
+  final baked = img.bakeOrientation(decoded);
+  img.Image preview = baked;
+  final maxDim = math.max(baked.width, baked.height);
+  if (maxDim > 1400) {
+    preview = img.copyResize(baked, width: (baked.width * 1400 / maxDim).round());
+  }
+  return {
+    'preview': Uint8List.fromList(img.encodeJpg(preview, quality: 90)),
+    'ratio': preview.width / preview.height,
+    'corners': detectDocumentCorners(preview),
+  };
+}
+
+/// Re-encodes a page for export: applies [colorProfile] ('color', 'gray',
+/// 'bw') and limits the long edge to what [dpi] needs for a page whose long
+/// side is [longEdgeInches]. Returns {bytes, width, height}.
+Map<String, dynamic> renderExportPageIsolate(Map<String, dynamic> m) {
+  final bytes = m['bytes'] as Uint8List;
+  final dpi = m['dpi'] as int;
+  final profile = m['profile'] as String;
+  final longEdgeInches = m['longEdgeInches'] as double;
+  var image = img.bakeOrientation(img.decodeImage(bytes)!);
+  final maxPx = (longEdgeInches * dpi).round();
+  final longEdge = math.max(image.width, image.height);
+  if (longEdge > maxPx) {
+    final scale = maxPx / longEdge;
+    image = img.copyResize(image,
+        width: (image.width * scale).round(), height: (image.height * scale).round());
+  }
+  if (profile == 'gray') {
+    _applyFilter(image, FilterMode.grayscale);
+  } else if (profile == 'bw') {
+    _applyFilter(image, FilterMode.sharpBW);
+  }
+  final quality = dpi >= 600 ? 95 : (dpi >= 300 ? 88 : 72);
+  return {
+    'bytes': Uint8List.fromList(img.encodeJpg(image, quality: quality)),
+    'width': image.width,
+    'height': image.height,
+  };
+}
+
+/// Splits a two-page book spread into left and right JPEG halves.
+List<Uint8List> splitSpreadIsolate(Uint8List bytes) {
+  final image = img.bakeOrientation(img.decodeImage(bytes)!);
+  // A spread held in portrait is rotated so the spine runs vertically.
+  final spread = image.height > image.width ? img.copyRotate(image, angle: -90) : image;
+  final half = spread.width ~/ 2;
+  final left = img.copyCrop(spread, x: 0, y: 0, width: half, height: spread.height);
+  final right = img.copyCrop(spread, x: half, y: 0, width: spread.width - half, height: spread.height);
+  return [
+    Uint8List.fromList(img.encodeJpg(left, quality: 92)),
+    Uint8List.fromList(img.encodeJpg(right, quality: 92)),
+  ];
+}
+
+/// Stamps a transparent PNG signature onto a page at a normalized rectangle
+/// (x, y, width as fractions of the page width/height). Returns a JPEG.
+Uint8List stampSignatureIsolate(Map<String, dynamic> m) {
+  final page = img.bakeOrientation(img.decodeImage(m['page'] as Uint8List)!);
+  final sig = img.decodePng(m['signature'] as Uint8List)!;
+  final rect = (m['rect'] as List).cast<double>();
+  final dstW = (rect[2] * page.width).round().clamp(8, page.width);
+  final dstH = (dstW * sig.height / sig.width).round().clamp(4, page.height);
+  img.compositeImage(
+    page,
+    sig,
+    dstX: (rect[0] * page.width).round(),
+    dstY: (rect[1] * page.height).round(),
+    dstW: dstW,
+    dstH: dstH,
+  );
+  return Uint8List.fromList(img.encodeJpg(page, quality: 92));
+}
+
+// ---------------------------------------------------------------------------
+// Document edge detection
+// ---------------------------------------------------------------------------
+
+/// Finds a document outline in [image]. Returns 8 normalized doubles
+/// (tl, tr, br, bl) or null when nothing page-like was found.
+List<double>? detectDocumentCorners(img.Image image) {
+  const target = 160;
+  final scale = target / math.max(image.width, image.height);
+  final small = scale < 1
+      ? img.copyResize(image,
+          width: math.max(1, (image.width * scale).round()),
+          height: math.max(1, (image.height * scale).round()))
+      : image;
+  final w = small.width, h = small.height;
+  final lum = Uint8List(w * h);
+  var i = 0;
+  for (var y = 0; y < h; y++) {
+    for (var x = 0; x < w; x++) {
+      lum[i++] = small.getPixel(x, y).luminance.toInt();
+    }
+  }
+  return detectQuadInLuminance(lum, w, h);
+}
+
+/// Edge detection on a raw luminance buffer (row-major, [w] x [h]). Used both
+/// for still photos and for live camera frames.
+///
+/// Approach: blur, Otsu-threshold, keep the largest bright region that does
+/// not cover the whole frame, then take its extreme points as corners.
+List<double>? detectQuadInLuminance(Uint8List lum, int w, int h) {
+  if (w < 8 || h < 8) return null;
+  final blurred = _boxBlur3(lum, w, h);
+  final t = _otsuThreshold(blurred);
+  final mask = Uint8List(w * h);
+  for (var i = 0; i < mask.length; i++) {
+    mask[i] = blurred[i] > t ? 1 : 0;
+  }
+
+  // Largest 4-connected bright component.
+  final labels = Int32List(w * h);
+  final stack = <int>[];
+  var bestLabel = 0, bestSize = 0, label = 0;
+  var bestTouchesAll = false;
+  for (var start = 0; start < mask.length; start++) {
+    if (mask[start] == 0 || labels[start] != 0) continue;
+    label++;
+    var size = 0;
+    var touches = 0; // bitmask: 1 left, 2 right, 4 top, 8 bottom
+    labels[start] = label;
+    stack.add(start);
+    while (stack.isNotEmpty) {
+      final p = stack.removeLast();
+      size++;
+      final x = p % w, y = p ~/ w;
+      if (x == 0) touches |= 1;
+      if (x == w - 1) touches |= 2;
+      if (y == 0) touches |= 4;
+      if (y == h - 1) touches |= 8;
+      void visit(int q) {
+        if (mask[q] == 1 && labels[q] == 0) {
+          labels[q] = label;
+          stack.add(q);
+        }
+      }
+
+      if (x > 0) visit(p - 1);
+      if (x < w - 1) visit(p + 1);
+      if (y > 0) visit(p - w);
+      if (y < h - 1) visit(p + w);
+    }
+    if (size > bestSize) {
+      bestSize = size;
+      bestLabel = label;
+      bestTouchesAll = touches == 15;
+    }
+  }
+  final total = w * h;
+  if (bestLabel == 0 || bestSize < total * 0.12 || bestSize > total * 0.97) return null;
+  if (bestTouchesAll && bestSize > total * 0.85) return null; // bright background, not a page
+
+  // Extreme points: tl = min(x+y), br = max(x+y), tr = max(x-y), bl = min(x-y).
+  var tl = 0, br = 0, tr = 0, bl = 0;
+  var minS = 1 << 30, maxS = -(1 << 30), maxD = -(1 << 30), minD = 1 << 30;
+  for (var p = 0; p < labels.length; p++) {
+    if (labels[p] != bestLabel) continue;
+    final x = p % w, y = p ~/ w;
+    final s = x + y, d = x - y;
+    if (s < minS) { minS = s; tl = p; }
+    if (s > maxS) { maxS = s; br = p; }
+    if (d > maxD) { maxD = d; tr = p; }
+    if (d < minD) { minD = d; bl = p; }
+  }
+  final pts = [tl, tr, br, bl]
+      .map((p) => [((p % w) + 0.5) / w, ((p ~/ w) + 0.5) / h])
+      .toList();
+
+  // The region should fill most of its own outline (i.e. be roughly a quad).
+  final quadArea = _polygonArea(pts) * total;
+  if (quadArea < total * 0.1 || bestSize < quadArea * 0.75) return null;
+  if (!_isConvex(pts)) return null;
+  return [for (final p in pts) ...p];
+}
+
+/// Re-orders four arbitrary normalized points into tl, tr, br, bl.
+List<double> orderCorners(List<List<double>> pts) {
+  List<double> pick(double Function(List<double>) score, bool max) =>
+      pts.reduce((a, b) => (max ? score(a) >= score(b) : score(a) <= score(b)) ? a : b);
+  final tl = pick((p) => p[0] + p[1], false);
+  final br = pick((p) => p[0] + p[1], true);
+  final tr = pick((p) => p[0] - p[1], true);
+  final bl = pick((p) => p[0] - p[1], false);
+  return [...tl, ...tr, ...br, ...bl];
+}
+
+Uint8List _boxBlur3(Uint8List src, int w, int h) {
+  final out = Uint8List(w * h);
+  for (var y = 0; y < h; y++) {
+    for (var x = 0; x < w; x++) {
+      var sum = 0, n = 0;
+      for (var dy = -1; dy <= 1; dy++) {
+        final yy = y + dy;
+        if (yy < 0 || yy >= h) continue;
+        for (var dx = -1; dx <= 1; dx++) {
+          final xx = x + dx;
+          if (xx < 0 || xx >= w) continue;
+          sum += src[yy * w + xx];
+          n++;
+        }
+      }
+      out[y * w + x] = sum ~/ n;
+    }
+  }
+  return out;
+}
+
+int _otsuThreshold(Uint8List data) {
+  final hist = List<int>.filled(256, 0);
+  for (final v in data) {
+    hist[v]++;
+  }
+  final total = data.length;
+  var sumAll = 0.0;
+  for (var i = 0; i < 256; i++) {
+    sumAll += i * hist[i];
+  }
+  var sumB = 0.0, wB = 0, best = 0.0, threshold = 127;
+  for (var t = 0; t < 256; t++) {
+    wB += hist[t];
+    if (wB == 0) continue;
+    final wF = total - wB;
+    if (wF == 0) break;
+    sumB += t * hist[t];
+    final mB = sumB / wB, mF = (sumAll - sumB) / wF;
+    final between = wB * wF * (mB - mF) * (mB - mF);
+    if (between > best) {
+      best = between;
+      threshold = t;
+    }
+  }
+  return threshold;
+}
+
+double _polygonArea(List<List<double>> p) {
+  var a = 0.0;
+  for (var i = 0; i < p.length; i++) {
+    final j = (i + 1) % p.length;
+    a += p[i][0] * p[j][1] - p[j][0] * p[i][1];
+  }
+  return a.abs() / 2;
+}
+
+bool _isConvex(List<List<double>> p) {
+  var sign = 0;
+  for (var i = 0; i < p.length; i++) {
+    final a = p[i], b = p[(i + 1) % p.length], c = p[(i + 2) % p.length];
+    final cross = (b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0]);
+    if (cross.abs() < 1e-9) return false;
+    final s = cross > 0 ? 1 : -1;
+    if (sign == 0) {
+      sign = s;
+    } else if (s != sign) {
+      return false;
+    }
+  }
+  return true;
 }
 
 // ---------------------------------------------------------------------------

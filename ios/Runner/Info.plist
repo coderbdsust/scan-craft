@@ -26,6 +26,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>ScanCraft uses the camera to capture and digitize document scans entirely on-device.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>ScanCraft uses Face ID to unlock documents you have locked.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>ScanCraft imports images from your photo library to add pages to a scan batch.</string>
 	<key>UILaunchStoryboardName</key>
