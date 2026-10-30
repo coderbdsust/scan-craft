@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 
+import 'package:scancraft/models/scan_document.dart';
 import 'package:scancraft/services/document_store.dart';
 import 'package:scancraft/services/export_service.dart';
 import 'package:scancraft/utils/image_pipeline.dart';
@@ -161,6 +162,34 @@ void main() {
     }
   });
 
+  test('cropped pages are stretched to the page shape', () {
+    final src = img.Image(width: 400, height: 300);
+    img.fill(src, color: img.ColorRgb8(240, 240, 240));
+    PipelineRequest req(List<double> corners) => PipelineRequest(
+          srcPathAsBytes: Uint8List.fromList(img.encodePng(src)),
+          corners: corners,
+          shadowRemoval: 0,
+          contrast: 0,
+          filterIndex: FilterMode.original,
+          strokes: const [],
+          deskew: false,
+          rotateQuads: 0,
+          maxOutDim: 2000,
+          pageAspect: PageShape.aspect(PageShape.a4, DocumentKind.document),
+        );
+    // Tall, nearly square crop (200 x 240) -> portrait A4, long side kept.
+    final tall = runPipeline(req([0.25, 0.1, 0.75, 0.1, 0.75, 0.9, 0.25, 0.9]));
+    expect(tall.height, closeTo(240, 2));
+    expect(tall.height / tall.width, closeTo(297 / 210, 0.02));
+    // Wide crop (320 x 150) -> landscape A4.
+    final wide = runPipeline(req([0.1, 0.25, 0.9, 0.25, 0.9, 0.75, 0.1, 0.75]));
+    expect(wide.width, closeTo(320, 2));
+    expect(wide.width / wide.height, closeTo(297 / 210, 0.02));
+    // "Original" keeps the crop's own shape.
+    expect(PageShape.aspect(PageShape.original, DocumentKind.document), 0);
+    expect(PageShape.aspect(PageShape.a4, DocumentKind.idCard), closeTo(1.585, 0.01));
+  });
+
   test('full-frame selection keeps the whole image', () {
     final src = img.Image(width: 321, height: 123);
     final out = runPipeline(PipelineRequest(
@@ -213,6 +242,10 @@ void main() {
     final text = String.fromCharCodes(pdf.readAsBytesSync());
     expect(text.startsWith('%PDF'), isTrue);
     expect(RegExp(r'/Type\s*/Page\b').allMatches(text).length, 2);
+    // A tiny 120x160 px page still fills a full A4 sheet (long side 841.7 pt).
+    final box = RegExp(r'/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)').firstMatch(text)!;
+    expect(double.parse(box.group(2)!), closeTo(11.69 * 72, 1));
+    expect(double.parse(box.group(1)!), closeTo(11.69 * 72 * 120 / 160, 1));
 
     final jpgs = await ExportService(store).exportJpgs(doc);
     expect(jpgs, hasLength(2));

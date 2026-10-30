@@ -25,6 +25,7 @@ class PipelineRequest {
     required this.deskew,
     required this.rotateQuads, // extra 90-degree turns after deskew
     required this.maxOutDim,
+    this.pageAspect = 0, // long/short side of the target page; 0 keeps the crop's shape
   });
 
   final Uint8List srcPathAsBytes;
@@ -36,6 +37,7 @@ class PipelineRequest {
   final bool deskew;
   final int rotateQuads;
   final int maxOutDim;
+  final double pageAspect;
 
   Map<String, dynamic> toMap() => {
         'bytes': srcPathAsBytes,
@@ -47,6 +49,7 @@ class PipelineRequest {
         'deskew': deskew,
         'rotateQuads': rotateQuads,
         'maxOutDim': maxOutDim,
+        'pageAspect': pageAspect,
       };
 
   static PipelineRequest fromMap(Map<String, dynamic> m) => PipelineRequest(
@@ -59,6 +62,7 @@ class PipelineRequest {
         deskew: m['deskew'] as bool,
         rotateQuads: m['rotateQuads'] as int,
         maxOutDim: m['maxOutDim'] as int,
+        pageAspect: (m['pageAspect'] as double?) ?? 0,
       );
 }
 
@@ -98,8 +102,21 @@ img.Image runPipeline(PipelineRequest req) {
   if (_isFullFrame(c)) {
     out = img.Image.from(src); // nothing to crop
   } else {
-    final outW = _quadAvgWidth(tl, tr, br, bl).round().clamp(16, 8192);
-    final outH = _quadAvgHeight(tl, tr, br, bl).round().clamp(16, 8192);
+    var outW = _quadAvgWidth(tl, tr, br, bl).round().clamp(16, 8192);
+    var outH = _quadAvgHeight(tl, tr, br, bl).round().clamp(16, 8192);
+    // Stretch to the target page shape, keeping the crop's orientation and
+    // its long-edge resolution.
+    if (req.pageAspect > 1) {
+      final long = math.max(outW, outH);
+      final short = (long / req.pageAspect).round().clamp(16, 8192);
+      if (outH >= outW) {
+        outH = long;
+        outW = short;
+      } else {
+        outW = long;
+        outH = short;
+      }
+    }
     final H = _homographyToSource(tl, tr, br, bl, outW, outH);
     out = _warpBilinear(src, outW, outH, H);
   }

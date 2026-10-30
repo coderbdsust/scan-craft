@@ -25,6 +25,29 @@ class DocumentKind {
   static const String book = 'book';
 }
 
+/// Shape cropped pages are stretched to.
+class PageShape {
+  static const String a4 = 'a4';
+  static const String letter = 'letter';
+  static const String original = 'original';
+
+  static const List<String> values = [a4, letter, original];
+
+  static String label(String shape) => switch (shape) {
+        a4 => 'A4',
+        letter => 'US Letter',
+        _ => 'Original (as cropped)',
+      };
+
+  /// Long/short side ratio for [shape], or 0 to keep the crop's own shape.
+  /// ID cards always use the ID-1 card shape (85.6 x 54 mm).
+  static double aspect(String shape, String kind) {
+    if (shape == original) return 0;
+    if (kind == DocumentKind.idCard) return 85.6 / 54;
+    return shape == letter ? 11 / 8.5 : 297 / 210;
+  }
+}
+
 /// A saved, multi-page scan. Page images live in the document's own folder
 /// inside the store; [pages] holds their file names in reading order.
 class ScanDocument {
@@ -123,16 +146,19 @@ class AppSettings {
     this.defaultDpi = 300,
     this.defaultColorProfile = ColorProfile.color,
     this.autoCapture = true,
+    this.pageShape = PageShape.a4,
   });
 
   int defaultDpi;
   String defaultColorProfile;
   bool autoCapture;
+  String pageShape;
 
   Map<String, dynamic> toJson() => {
         'defaultDpi': defaultDpi,
         'defaultColorProfile': defaultColorProfile,
         'autoCapture': autoCapture,
+        'pageShape': pageShape,
       };
 
   factory AppSettings.fromJson(Map<String, dynamic> j) => AppSettings(
@@ -140,5 +166,6 @@ class AppSettings {
         defaultColorProfile:
             j['defaultColorProfile'] as String? ?? ColorProfile.color,
         autoCapture: j['autoCapture'] as bool? ?? true,
+        pageShape: j['pageShape'] as String? ?? PageShape.a4,
       );
 }

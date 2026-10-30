@@ -6,6 +6,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../models/scan_document.dart';
 import '../../models/scan_session.dart';
 import '../../services/document_store.dart';
 import '../../theme/app_theme.dart';
@@ -166,6 +167,9 @@ class _CropCleanEditorScreenState extends State<CropCleanEditorScreen> {
   // Live previews
   // ------------------------------------------------------------------
 
+  /// Target page shape for cropped pages (from Settings; ID cards use ID-1).
+  double get _pageAspect => PageShape.aspect(DocumentStore.instance.settings.pageShape, _session.kind);
+
   int _pipelineFilter(_PageEdit p) =>
       p.filter == 5 ? FilterMode.original : _pipelineFilterOfChip[p.filter];
 
@@ -205,6 +209,7 @@ class _CropCleanEditorScreenState extends State<CropCleanEditorScreen> {
           deskew: p.autoDeskew,
           rotateQuads: p.rotateQuads,
           maxOutDim: 900,
+          pageAspect: _pageAspect,
         );
         final r = await compute(resultPreviewIsolate, req.toMap());
         if (!mounted || gen != p.renderGen) return;
@@ -1188,6 +1193,7 @@ class _CropCleanEditorScreenState extends State<CropCleanEditorScreen> {
           deskew: e.autoDeskew,
           rotateQuads: e.rotateQuads,
           maxOutDim: 2400,
+          pageAspect: _pageAspect,
         );
         final encoded = await compute(_processIsolate, req.toMap());
         final out = File('${store.tempDir.path}/edit_${DateTime.now().microsecondsSinceEpoch}.jpg');

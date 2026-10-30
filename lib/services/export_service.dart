@@ -16,10 +16,12 @@ class ExportService {
 
   final DocumentStore store;
 
-  /// Long side of the physical page used to size exports, in inches.
-  /// A4 for documents, ID-1 card size for ID cards.
-  static double _longEdgeInches(ScanDocument doc) =>
-      doc.kind == DocumentKind.idCard ? 3.37 : 11.69;
+  /// Long side of the physical page used to size exports, in inches:
+  /// ID-1 card size for ID cards, otherwise the paper chosen in Settings.
+  double _longEdgeInches(ScanDocument doc) {
+    if (doc.kind == DocumentKind.idCard) return 3.37;
+    return store.settings.pageShape == PageShape.letter ? 11.0 : 11.69;
+  }
 
   Future<List<Map<String, dynamic>>> _renderPages(ScanDocument doc) async {
     final rendered = <Map<String, dynamic>>[];
@@ -46,8 +48,10 @@ class ExportService {
     for (final p in pages) {
       final w = (p['width'] as int).toDouble();
       final h = (p['height'] as int).toDouble();
-      // Page size in points follows the pixel density chosen for the document.
-      final format = PdfPageFormat(w / doc.dpi * 72, h / doc.dpi * 72);
+      // Every page fills a real sheet: its long side is the paper's long side,
+      // whatever the pixel count (DPI only controls image quality).
+      final pointsPerPixel = _longEdgeInches(doc) * 72 / (w > h ? w : h);
+      final format = PdfPageFormat(w * pointsPerPixel, h * pointsPerPixel);
       final image = pw.MemoryImage(p['bytes'] as Uint8List);
       pdf.addPage(pw.Page(
         pageFormat: format,

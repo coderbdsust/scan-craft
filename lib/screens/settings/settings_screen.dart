@@ -39,6 +39,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
             activeThumbColor: AppTheme.primaryGreen,
             onChanged: (v) => _update((s) => s.autoCapture = v),
           ),
+          ListTile(
+            title: const Text('Cropped page shape'),
+            subtitle: const Text('Cropped pages are stretched to this paper shape'),
+            trailing: DropdownButton<String>(
+              value: s.pageShape,
+              underline: const SizedBox.shrink(),
+              items: [
+                for (final p in PageShape.values)
+                  DropdownMenuItem(value: p, child: Text(PageShape.label(p))),
+              ],
+              onChanged: (v) {
+                if (v != null) _update((s) => s.pageShape = v);
+              },
+            ),
+          ),
           _section('DEFAULTS FOR NEW DOCUMENTS'),
           ListTile(
             title: const Text('Export resolution'),
