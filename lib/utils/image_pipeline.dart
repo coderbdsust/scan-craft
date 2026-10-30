@@ -94,10 +94,15 @@ img.Image runPipeline(PipelineRequest req) {
   final br = _Pt(c[4] * w, c[5] * h);
   final bl = _Pt(c[6] * w, c[7] * h);
 
-  final outW = _quadAvgWidth(tl, tr, br, bl).round().clamp(16, 8192);
-  final outH = _quadAvgHeight(tl, tr, br, bl).round().clamp(16, 8192);
-  final H = _homographyToSource(tl, tr, br, bl, outW, outH);
-  img.Image out = _warpBilinear(src, outW, outH, H);
+  img.Image out;
+  if (_isFullFrame(c)) {
+    out = img.Image.from(src); // nothing to crop
+  } else {
+    final outW = _quadAvgWidth(tl, tr, br, bl).round().clamp(16, 8192);
+    final outH = _quadAvgHeight(tl, tr, br, bl).round().clamp(16, 8192);
+    final H = _homographyToSource(tl, tr, br, bl, outW, outH);
+    out = _warpBilinear(src, outW, outH, H);
+  }
 
   // 2. Auto-deskew (estimate on grayscale of warped page).
   double angleDeg = 0;
@@ -128,6 +133,14 @@ img.Image runPipeline(PipelineRequest req) {
   }
 
   return out;
+}
+
+bool _isFullFrame(List<double> c) {
+  const full = [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0];
+  for (var i = 0; i < 8; i++) {
+    if ((c[i] - full[i]).abs() > 0.002) return false;
+  }
+  return true;
 }
 
 /// Runs pipeline + JPEG encoding; intended for `compute`.
@@ -416,10 +429,38 @@ Map<String, dynamic> loadPreviewIsolate(Uint8List bytes) {
   if (maxDim > 1400) {
     preview = img.copyResize(baked, width: (baked.width * 1400 / maxDim).round());
   }
+  // Smaller copy used for live filter / result previews.
+  final work = maxDim > 900
+      ? img.copyResize(baked, width: (baked.width * 900 / maxDim).round())
+      : baked;
   return {
     'preview': Uint8List.fromList(img.encodeJpg(preview, quality: 90)),
+    'work': Uint8List.fromList(img.encodeJpg(work, quality: 90)),
     'ratio': preview.width / preview.height,
     'corners': detectDocumentCorners(preview),
+  };
+}
+
+/// Applies only the tone steps (shadow removal, filter, contrast) to a preview
+/// so the editor can show them live without changing the image geometry.
+Uint8List filterPreviewIsolate(Map<String, dynamic> m) {
+  final image = img.decodeImage(m['bytes'] as Uint8List)!;
+  final shadow = m['shadow'] as double;
+  final contrast = m['contrast'] as double;
+  var out = image;
+  if (shadow > 0.01) out = _removeShadows(out, shadow);
+  _applyFilter(out, m['filter'] as int);
+  if (contrast > 0.01) _adjustContrast(out, contrast);
+  return Uint8List.fromList(img.encodeJpg(out, quality: 85));
+}
+
+/// Full pipeline on a preview-sized image: what Save will produce.
+/// Returns {bytes, ratio}.
+Map<String, dynamic> resultPreviewIsolate(Map<String, dynamic> m) {
+  final out = runPipeline(PipelineRequest.fromMap(m));
+  return {
+    'bytes': Uint8List.fromList(img.encodeJpg(out, quality: 85)),
+    'ratio': out.width / out.height,
   };
 }
 

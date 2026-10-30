@@ -77,6 +77,64 @@ void main() {
     expect(out.getPixel(150, 250).luminance, greaterThan(200));
   });
 
+  test('result preview is cropped to the selected area', () {
+    // Left half bright, right half dark; select only the left half.
+    final src = img.Image(width: 400, height: 300);
+    img.fill(src, color: img.ColorRgb8(20, 20, 20));
+    img.fillRect(src, x1: 0, y1: 0, x2: 199, y2: 299, color: img.ColorRgb8(240, 240, 240));
+    final req = PipelineRequest(
+      srcPathAsBytes: Uint8List.fromList(img.encodePng(src)),
+      corners: const [0.05, 0.05, 0.45, 0.05, 0.45, 0.95, 0.05, 0.95],
+      shadowRemoval: 0,
+      contrast: 0,
+      filterIndex: FilterMode.original,
+      strokes: const [],
+      deskew: false,
+      rotateQuads: 0,
+      maxOutDim: 900,
+    );
+    final r = resultPreviewIsolate(req.toMap());
+    final out = img.decodeJpg(r['bytes'] as Uint8List)!;
+    expect(out.width, closeTo(160, 3));
+    expect(out.height, closeTo(270, 3));
+    expect(r['ratio'] as double, closeTo(160 / 270, 0.02));
+    // Every sampled pixel comes from the bright (selected) half.
+    for (final x in [5, 80, 150]) {
+      expect(out.getPixel(x, 135).luminance, greaterThan(200), reason: 'x=$x');
+    }
+  });
+
+  test('full-frame selection keeps the whole image', () {
+    final src = img.Image(width: 321, height: 123);
+    final out = runPipeline(PipelineRequest(
+      srcPathAsBytes: Uint8List.fromList(img.encodePng(src)),
+      corners: const [0, 0, 1, 0, 1, 1, 0, 1],
+      shadowRemoval: 0,
+      contrast: 0,
+      filterIndex: FilterMode.original,
+      strokes: const [],
+      deskew: false,
+      rotateQuads: 0,
+      maxOutDim: 2000,
+    ));
+    expect([out.width, out.height], [321, 123]);
+  });
+
+  test('live filter preview keeps geometry and applies the filter', () {
+    final src = img.Image(width: 64, height: 48);
+    img.fill(src, color: img.ColorRgb8(200, 40, 40));
+    final bytes = filterPreviewIsolate({
+      'bytes': Uint8List.fromList(img.encodeJpg(src)),
+      'filter': FilterMode.grayscale,
+      'shadow': 0.0,
+      'contrast': 0.0,
+    });
+    final out = img.decodeJpg(bytes)!;
+    expect([out.width, out.height], [64, 48]);
+    final p = out.getPixel(32, 24);
+    expect((p.r - p.g).abs(), lessThan(6)); // no longer red
+  });
+
   test('book spreads split into two halves', () {
     final spread = img.Image(width: 800, height: 500);
     final halves = splitSpreadIsolate(Uint8List.fromList(img.encodeJpg(spread)));

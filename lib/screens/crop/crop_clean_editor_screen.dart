@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../models/scan_session.dart';
 import '../../services/document_store.dart';
@@ -17,6 +20,11 @@ class _PageEdit {
 
   final File file;
   Uint8List? previewBytes;
+  Uint8List? workBytes; // smaller copy for live previews
+  Uint8List? filteredBytes; // previewBytes with the current filter applied
+  Uint8List? resultBytes; // cropped + filtered, what Save will produce
+  double resultRatio = 3 / 4;
+  int renderGen = 0;
   double ratio = 3 / 4;
   String? error;
 
@@ -32,6 +40,8 @@ class _PageEdit {
   bool dirty = false;
 
   bool get loaded => previewBytes != null || error != null;
+
+  bool get hasTone => shadow > 0.01 || contrast > 0.01 || (filter != 0 && filter != 5);
 
   void resetCorners() {
     corners.setAll(0, detected ?? _fullFrame);
@@ -49,7 +59,17 @@ class _CropCleanEditorScreenState extends State<CropCleanEditorScreen> {
   final ScanSession _session = ScanSession.instance;
   final List<_PageEdit> _edits = [];
   int _index = 0;
+
+  // Corner dragging: updates repaint through notifiers instead of rebuilding
+  // the whole screen on every pointer move.
   int? _dragIndex;
+  int? _pendingCorner;
+  Offset _grabOffset = Offset.zero;
+  final ValueNotifier<int> _cornerTick = ValueNotifier(0);
+  final ValueNotifier<Offset?> _loupe = ValueNotifier(null);
+
+  bool _showResult = false;
+  Timer? _renderDebounce;
 
   bool _busy = false;
   String _busyLabel = '';
@@ -104,6 +124,14 @@ class _CropCleanEditorScreenState extends State<CropCleanEditorScreen> {
     _loadAll();
   }
 
+  @override
+  void dispose() {
+    _renderDebounce?.cancel();
+    _cornerTick.dispose();
+    _loupe.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadAll() async {
     // Current page first so the canvas fills quickly.
     final order = [_index, for (var i = 0; i < _edits.length; i++) if (i != _index) i];
@@ -120,6 +148,7 @@ class _CropCleanEditorScreenState extends State<CropCleanEditorScreen> {
       if (!mounted) return;
       setState(() {
         edit.previewBytes = result['preview'] as Uint8List;
+        edit.workBytes = result['work'] as Uint8List;
         // Match canvas aspect to the actual page so crop UVs map 1:1.
         edit.ratio = result['ratio'] as double;
         edit.detected = (result['corners'] as List<double>?);
@@ -133,6 +162,71 @@ class _CropCleanEditorScreenState extends State<CropCleanEditorScreen> {
     }
   }
 
+  // ------------------------------------------------------------------
+  // Live previews
+  // ------------------------------------------------------------------
+
+  int _pipelineFilter(_PageEdit p) =>
+      p.filter == 5 ? FilterMode.original : _pipelineFilterOfChip[p.filter];
+
+  void _scheduleRender({bool immediate = false}) {
+    _renderDebounce?.cancel();
+    _renderDebounce = Timer(Duration(milliseconds: immediate ? 0 : 250), _render);
+  }
+
+  /// Re-renders the filtered canvas image and, in result mode, the cropped
+  /// output for the current page. Stale renders are dropped.
+  Future<void> _render() async {
+    final p = _page;
+    final work = p?.workBytes;
+    if (p == null || work == null || !mounted) return;
+    final gen = ++p.renderGen;
+    try {
+      if (p.hasTone) {
+        final bytes = await compute(filterPreviewIsolate, {
+          'bytes': work,
+          'filter': _pipelineFilter(p),
+          'shadow': p.shadow,
+          'contrast': p.contrast,
+        });
+        if (!mounted || gen != p.renderGen) return;
+        setState(() => p.filteredBytes = bytes);
+      } else if (p.filteredBytes != null) {
+        setState(() => p.filteredBytes = null);
+      }
+      if (_showResult) {
+        final req = PipelineRequest(
+          srcPathAsBytes: work,
+          corners: List.of(p.corners),
+          shadowRemoval: p.shadow,
+          contrast: p.contrast,
+          filterIndex: _pipelineFilter(p),
+          strokes: [for (final s in p.strokes) List.of(s)],
+          deskew: p.autoDeskew,
+          rotateQuads: p.rotateQuads,
+          maxOutDim: 900,
+        );
+        final r = await compute(resultPreviewIsolate, req.toMap());
+        if (!mounted || gen != p.renderGen) return;
+        setState(() {
+          p.resultBytes = r['bytes'] as Uint8List;
+          p.resultRatio = r['ratio'] as double;
+        });
+      }
+    } catch (e) {
+      debugPrint('ScanCraft: preview render failed: $e');
+    }
+  }
+
+  void _setResultMode(bool value) {
+    if (value == _showResult) return;
+    setState(() {
+      _showResult = value;
+      if (value) _page?.resultBytes = null;
+    });
+    if (value) _scheduleRender(immediate: true);
+  }
+
   bool get _eraserMode => _page?.filter == 5;
 
   void _markDirty(void Function(_PageEdit p) change) {
@@ -142,16 +236,8 @@ class _CropCleanEditorScreenState extends State<CropCleanEditorScreen> {
       change(p);
       p.dirty = true;
     });
-  }
-
-  void _dragCorner(int index, DragUpdateDetails d) {
-    final rb = _canvasBox;
-    if (rb == null) return;
-    final size = rb.size;
-    _markDirty((p) {
-      p.corners[index * 2] = (p.corners[index * 2] + d.delta.dx / size.width).clamp(0.0, 1.0);
-      p.corners[index * 2 + 1] = (p.corners[index * 2 + 1] + d.delta.dy / size.height).clamp(0.0, 1.0);
-    });
+    _cornerTick.value++;
+    _scheduleRender();
   }
 
   void _onCanvasTap(TapUpDetails d) {
@@ -165,42 +251,68 @@ class _CropCleanEditorScreenState extends State<CropCleanEditorScreen> {
     _markDirty((p) => p.strokes.add([u, v, 0.035]));
   }
 
-  int? _hitCorner(Offset local, Size size) {
+  /// Decides at pointer-down whether a touch grabs a corner. Claimed touches
+  /// win immediately, so the page scroll can't steal the drag.
+  bool _claimPointer(Offset globalPosition) {
     final p = _page;
-    if (p == null) return null;
-    const radius = 34.0;
-    for (var i = 0; i < 4; i++) {
-      final cx = p.corners[i * 2] * size.width;
-      final cy = p.corners[i * 2 + 1] * size.height;
-      final d = (local - Offset(cx, cy)).distance;
-      if (d <= radius) return i;
-    }
-    return null;
-  }
-
-  void _onPanStart(DragStartDetails d) {
-    if (_eraserMode) return;
     final rb = _canvasBox;
-    if (rb == null) return;
-    final local = rb.globalToLocal(d.globalPosition);
-    setState(() => _dragIndex = _hitCorner(local, rb.size));
-  }
-
-  void _onPanUpdate(DragUpdateDetails d) {
-    final i = _dragIndex;
-    if (i != null) {
-      _dragCorner(i, d);
+    if (p == null || rb == null || !p.loaded || _showResult || _eraserMode) return false;
+    final local = rb.globalToLocal(globalPosition);
+    final size = rb.size;
+    int? best;
+    var bestDistance = 48.0; // generous touch target around each handle
+    for (var i = 0; i < 4; i++) {
+      final corner = Offset(p.corners[i * 2] * size.width, p.corners[i * 2 + 1] * size.height);
+      final d = (local - corner).distance;
+      if (d < bestDistance) {
+        bestDistance = d;
+        best = i;
+        _grabOffset = corner - local;
+      }
     }
+    _pendingCorner = best;
+    return best != null;
   }
 
-  void _onPanEnd(DragEndDetails d) => setState(() => _dragIndex = null);
+  void _onDragStart(DragStartDetails d) {
+    _dragIndex = _pendingCorner;
+    HapticFeedback.selectionClick();
+    _moveCorner(d.globalPosition);
+  }
+
+  void _onDragUpdate(DragUpdateDetails d) => _moveCorner(d.globalPosition);
+
+  /// The corner follows the finger 1:1 (keeping the initial grab offset).
+  void _moveCorner(Offset globalPosition) {
+    final i = _dragIndex;
+    final p = _page;
+    final rb = _canvasBox;
+    if (i == null || p == null || rb == null) return;
+    final size = rb.size;
+    final local = rb.globalToLocal(globalPosition) + _grabOffset;
+    final x = (local.dx / size.width).clamp(0.0, 1.0);
+    final y = (local.dy / size.height).clamp(0.0, 1.0);
+    p.corners[i * 2] = x;
+    p.corners[i * 2 + 1] = y;
+    _cornerTick.value++;
+    _loupe.value = Offset(x * size.width, y * size.height);
+  }
+
+  void _endDrag() {
+    if (_dragIndex == null) return;
+    _loupe.value = null;
+    _markDirty((_) => _dragIndex = null);
+  }
 
   void _goTo(int index) {
     if (index < 0 || index >= _edits.length) return;
     setState(() {
       _index = index;
       _dragIndex = null;
+      _edits[index].resultBytes = null;
     });
+    _cornerTick.value++;
+    _scheduleRender(immediate: true);
   }
 
   @override
@@ -359,7 +471,8 @@ class _CropCleanEditorScreenState extends State<CropCleanEditorScreen> {
             SingleChildScrollView(
               child: Column(
                 children: [
-                  _buildCanvas(page),
+                  _buildModeToggle(),
+                  if (_showResult) _buildResult(page) else _buildCanvas(page),
                   if (_edits.length > 1) _buildPageStrip(),
                   _buildPresets(page),
                   _buildControls(page),
@@ -392,40 +505,91 @@ class _CropCleanEditorScreenState extends State<CropCleanEditorScreen> {
   // Canvas
   // ------------------------------------------------------------------
 
-  Widget _buildCanvas(_PageEdit page) {
+  Widget _buildModeToggle() {
     return Padding(
-      padding: const EdgeInsets.all(16),
-      child: AspectRatio(
-        aspectRatio: page.ratio,
-        child: LayoutBuilder(
-          key: _canvasBoxKey,
-          builder: (context, constraints) {
-            final w = constraints.maxWidth;
-            final h = constraints.maxHeight;
-            final handles = <Widget>[];
-            for (var i = 0; i < 4; i++) {
-              final cx = page.corners[i * 2] * w;
-              final cy = page.corners[i * 2 + 1] * h;
-              final isDragged = _dragIndex == i;
-              handles.add(Positioned(
-                left: cx - 16,
-                top: cy - 16,
-                child: _buildCropHandle(isActive: isDragged),
-              ));
-            }
-            return GestureDetector(
-              onTapUp: _onCanvasTap,
-              onPanStart: _onPanStart,
-              onPanUpdate: _onPanUpdate,
-              onPanEnd: _onPanEnd,
-              child: Stack(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: SizedBox(
+        width: double.infinity,
+        child: SegmentedButton<bool>(
+          showSelectedIcon: false,
+          segments: const [
+            ButtonSegment(value: false, label: Text('Adjust crop'), icon: Icon(Icons.crop, size: 18)),
+            ButtonSegment(value: true, label: Text('Preview result'), icon: Icon(Icons.visibility_outlined, size: 18)),
+          ],
+          selected: {_showResult},
+          onSelectionChanged: (v) => _setResultMode(v.first),
+        ),
+      ),
+    );
+  }
+
+  /// The cropped, filtered page exactly as Save will produce it (at preview
+  /// resolution).
+  Widget _buildResult(_PageEdit page) {
+    final bytes = page.resultBytes;
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 560),
+        child: Center(
+          child: bytes == null
+              ? const SizedBox(height: 320, child: Center(child: CircularProgressIndicator()))
+              : AspectRatio(
+                  aspectRatio: page.resultRatio,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withValues(alpha: 0.25), blurRadius: 16, offset: const Offset(0, 8)),
+                      ],
+                    ),
+                    child: Image.memory(bytes, fit: BoxFit.contain, gaplessPlayback: true),
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCanvas(_PageEdit page) {
+    final image = page.filteredBytes ?? page.previewBytes;
+    return RawGestureDetector(
+      behavior: HitTestBehavior.translucent,
+      gestures: {
+        _CornerDragRecognizer: GestureRecognizerFactoryWithHandlers<_CornerDragRecognizer>(
+          () => _CornerDragRecognizer(),
+          (r) => r
+            ..claims = _claimPointer
+            ..dragStartBehavior = DragStartBehavior.down
+            ..onStart = _onDragStart
+            ..onUpdate = _onDragUpdate
+            ..onEnd = ((_) => _endDrag())
+            ..onCancel = _endDrag,
+        ),
+        TapGestureRecognizer: GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
+          () => TapGestureRecognizer(),
+          (r) => r.onTapUp = _onCanvasTap,
+        ),
+      },
+      // The padding is part of the touch area, so handles sitting on the
+      // image border can still be grabbed from outside.
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: AspectRatio(
+          aspectRatio: page.ratio,
+          child: LayoutBuilder(
+            key: _canvasBoxKey,
+            builder: (context, constraints) {
+              final w = constraints.maxWidth;
+              final h = constraints.maxHeight;
+              return Stack(
                 clipBehavior: Clip.none,
                 children: [
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.black,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(4),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.3),
@@ -443,29 +607,32 @@ class _CropCleanEditorScreenState extends State<CropCleanEditorScreen> {
                                     style: const TextStyle(color: AppTheme.slate300)),
                               ),
                             )
-                          : page.previewBytes == null
+                          : image == null
                               ? const Center(child: CircularProgressIndicator())
-                              : ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.memory(
-                                    page.previewBytes!,
-                                    width: double.infinity,
-                                    height: double.infinity,
-                                    fit: BoxFit.contain,
-                                    gaplessPlayback: true,
-                                  ),
+                              : Image.memory(
+                                  image,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  fit: BoxFit.fill,
+                                  gaplessPlayback: true,
                                 ),
                     ),
                   ),
-                  // Crop quad
+                  // Crop quad, darkened outside area and handles
                   Positioned.fill(
                     child: IgnorePointer(
-                      child: CustomPaint(
-                        painter: _CropQuadPainter(List.of(page.corners)),
+                      child: RepaintBoundary(
+                        child: CustomPaint(
+                          painter: _CropQuadPainter(
+                            corners: page.corners,
+                            activeIndex: () => _dragIndex,
+                            showHandles: !_eraserMode,
+                            repaint: _cornerTick,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                  ...handles,
                   if (_eraserMode)
                     Positioned(
                       top: 8,
@@ -500,7 +667,7 @@ class _CropCleanEditorScreenState extends State<CropCleanEditorScreen> {
                           height: 40,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.white.withValues(alpha: 0.55),
+                            color: Colors.white.withValues(alpha: 0.85),
                             border: Border.all(color: AppTheme.primaryGreen, width: 1),
                           ),
                         ),
@@ -544,45 +711,35 @@ class _CropCleanEditorScreenState extends State<CropCleanEditorScreen> {
                       ),
                     ),
                   ),
+                  // Magnifier above the corner being dragged
+                  ValueListenableBuilder<Offset?>(
+                    valueListenable: _loupe,
+                    builder: (context, pos, _) {
+                      if (pos == null) return const SizedBox.shrink();
+                      const size = 96.0, lift = 86.0;
+                      // Show it below the finger when there is no room above.
+                      final dy = pos.dy - lift - size / 2 < -20 ? lift : -lift;
+                      return Positioned(
+                        left: pos.dx - size / 2,
+                        top: pos.dy + dy - size / 2,
+                        child: IgnorePointer(
+                          child: RawMagnifier(
+                            size: const Size(size, size),
+                            magnificationScale: 2.2,
+                            focalPointOffset: Offset(0, -dy),
+                            decoration: MagnifierDecoration(
+                              shape: const CircleBorder(side: BorderSide(color: AppTheme.primaryGreen, width: 2)),
+                              shadows: [BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 8)],
+                            ),
+                            child: const Center(child: Icon(Icons.add, color: AppTheme.primaryGreen, size: 18)),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ],
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCropHandle({required bool isActive}) {
-    return Container(
-      width: 32,
-      height: 32,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 4,
-          ),
-        ],
-      ),
-      child: Center(
-        child: Container(
-          width: 14,
-          height: 14,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppTheme.primaryGreen,
-            boxShadow: isActive
-                ? [
-                    BoxShadow(
-                      color: AppTheme.primaryGreen.withValues(alpha: 0.5),
-                      blurRadius: 6,
-                      spreadRadius: 3,
-                    ),
-                  ]
-                : null,
+              );
+            },
           ),
         ),
       ),
@@ -849,7 +1006,7 @@ class _CropCleanEditorScreenState extends State<CropCleanEditorScreen> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Filters and sliders are applied when you tap Save.',
+            'Tap "Preview result" to see the cropped page before saving.',
             style: TextStyle(fontSize: 11, color: AppTheme.slate500),
           ),
         ],
@@ -952,6 +1109,7 @@ class _CropCleanEditorScreenState extends State<CropCleanEditorScreen> {
               ..dirty = true;
           }
         });
+        _scheduleRender(immediate: true);
         showSnack(context, 'Settings applied to all ${_edits.length} pages');
       case 'detect':
         _markDirty((p) => p.resetCorners());
@@ -969,7 +1127,12 @@ class _CropCleanEditorScreenState extends State<CropCleanEditorScreen> {
       _edits.removeAt(i);
       if (_index >= _edits.length) _index = _edits.length - 1;
     });
-    if (_edits.isEmpty) Navigator.pop(context);
+    if (_edits.isEmpty) {
+      Navigator.pop(context);
+      return;
+    }
+    _cornerTick.value++;
+    _scheduleRender(immediate: true);
   }
 
   void _resetPage() {
@@ -985,6 +1148,8 @@ class _CropCleanEditorScreenState extends State<CropCleanEditorScreen> {
       p.resetCorners();
       p.dirty = p.detected != null;
     });
+    _cornerTick.value++;
+    _scheduleRender(immediate: true);
   }
 
   /// Processes every edited page, then saves the batch to the library.
@@ -1066,44 +1231,85 @@ class _CropCleanEditorScreenState extends State<CropCleanEditorScreen> {
       processAndEncodeIsolate(PipelineRequest.fromMap(m));
 }
 
-class _CropQuadPainter extends CustomPainter {
-  final List<double> corners;
+/// Pan recognizer that only takes pointers landing on a crop handle, and
+/// wins the gesture arena immediately for them (ahead of the page scroll).
+class _CornerDragRecognizer extends PanGestureRecognizer {
+  bool Function(Offset globalPosition) claims = _never;
 
-  _CropQuadPainter(this.corners);
+  static bool _never(Offset _) => false;
+
+  @override
+  bool isPointerAllowed(PointerEvent event) => super.isPointerAllowed(event) && claims(event.position);
+
+  @override
+  void addAllowedPointer(PointerDownEvent event) {
+    super.addAllowedPointer(event);
+    resolve(GestureDisposition.accepted);
+  }
+}
+
+class _CropQuadPainter extends CustomPainter {
+  _CropQuadPainter({
+    required this.corners,
+    required this.activeIndex,
+    required this.showHandles,
+    required Listenable repaint,
+  }) : super(repaint: repaint);
+
+  final List<double> corners; // mutated in place while dragging
+  final int? Function() activeIndex;
+  final bool showHandles;
 
   @override
   void paint(Canvas canvas, Size size) {
     final points = <Offset>[
-      Offset(corners[0] * size.width, corners[1] * size.height),
-      Offset(corners[2] * size.width, corners[3] * size.height),
-      Offset(corners[4] * size.width, corners[5] * size.height),
-      Offset(corners[6] * size.width, corners[7] * size.height),
+      for (var i = 0; i < 4; i++) Offset(corners[i * 2] * size.width, corners[i * 2 + 1] * size.height),
     ];
-    final path = Path()
-      ..moveTo(points[0].dx, points[0].dy)
-      ..lineTo(points[1].dx, points[1].dy)
-      ..lineTo(points[2].dx, points[2].dy)
-      ..lineTo(points[3].dx, points[3].dy)
-      ..close();
-    final fill = Paint()
-      ..color = AppTheme.primaryGreen.withValues(alpha: 0.14)
-      ..style = PaintingStyle.fill;
-    canvas.drawPath(path, fill);
-    final stroke = Paint()
-      ..color = AppTheme.primaryGreen
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5;
-    canvas.drawPath(path, stroke);
+    final quad = Path()..addPolygon(points, true);
 
-    // Perspective guide lines (faint)
+    // Dim everything that will be cropped away.
+    final outside = Path()
+      ..fillType = PathFillType.evenOdd
+      ..addRect(Offset.zero & size)
+      ..addPolygon(points, true);
+    canvas.drawPath(outside, Paint()..color = Colors.black.withValues(alpha: 0.45));
+
+    canvas.drawPath(
+        quad,
+        Paint()
+          ..color = AppTheme.primaryGreen
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.5);
+
+    // Rule-of-thirds guides inside the quad.
     final guide = Paint()
-      ..color = AppTheme.primaryGreen.withValues(alpha: 0.35)
-      ..style = PaintingStyle.stroke
+      ..color = Colors.white.withValues(alpha: 0.35)
       ..strokeWidth = 1;
-    canvas.drawLine(points[0], points[2], guide);
-    canvas.drawLine(points[1], points[3], guide);
+    Offset lerp(Offset a, Offset b, double t) => Offset.lerp(a, b, t)!;
+    for (final t in const [1 / 3, 2 / 3]) {
+      canvas.drawLine(lerp(points[0], points[1], t), lerp(points[3], points[2], t), guide);
+      canvas.drawLine(lerp(points[0], points[3], t), lerp(points[1], points[2], t), guide);
+    }
+
+    if (!showHandles) return;
+    final active = activeIndex();
+    for (var i = 0; i < 4; i++) {
+      final p = points[i];
+      final isActive = active == i;
+      if (isActive) {
+        canvas.drawCircle(p, 26, Paint()..color = AppTheme.primaryGreen.withValues(alpha: 0.25));
+      }
+      canvas.drawCircle(
+          p,
+          isActive ? 17 : 15,
+          Paint()
+            ..color = Colors.black.withValues(alpha: 0.25)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
+      canvas.drawCircle(p, isActive ? 16 : 14, Paint()..color = Colors.white);
+      canvas.drawCircle(p, isActive ? 8 : 7, Paint()..color = AppTheme.primaryGreen);
+    }
   }
 
   @override
-  bool shouldRepaint(_CropQuadPainter oldDelegate) => !listEquals(oldDelegate.corners, corners);
+  bool shouldRepaint(_CropQuadPainter oldDelegate) => true;
 }
