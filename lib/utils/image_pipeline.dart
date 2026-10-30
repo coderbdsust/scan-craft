@@ -175,7 +175,9 @@ List<double> _homographyToSource(_Pt tl, _Pt tr, _Pt br, _Pt bl, int outW, int o
   final b = List<double>.filled(8, 0);
   var row = 0;
   for (var i = 0; i < 4; i++) {
-    final X = src[i].x, Y = src[i].y, u = dst[i].x, v = dst[i].y;
+    // Inputs (X, Y) are output pixels, results (u, v) are source pixels, so
+    // the solved matrix maps OUTPUT -> SOURCE as _warpBilinear expects.
+    final X = dst[i].x, Y = dst[i].y, u = src[i].x, v = src[i].y;
     A[row * 8 + 0] = X; A[row * 8 + 1] = Y; A[row * 8 + 2] = 1;
     A[row * 8 + 6] = -u * X; A[row * 8 + 7] = -u * Y; b[row] = u;
     row++;

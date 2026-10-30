@@ -104,6 +104,63 @@ void main() {
     }
   });
 
+  PipelineRequest cropRequest(img.Image src, List<double> corners) => PipelineRequest(
+        srcPathAsBytes: Uint8List.fromList(img.encodePng(src)),
+        corners: corners,
+        shadowRemoval: 0,
+        contrast: 0,
+        filterIndex: FilterMode.original,
+        strokes: const [],
+        deskew: false,
+        rotateQuads: 0,
+        maxOutDim: 2000,
+      );
+
+  test('off-center crop keeps exactly the selected subject', () {
+    // Dark frame with a red marker at x 220..259, y 140..179.
+    final src = img.Image(width: 400, height: 300);
+    img.fill(src, color: img.ColorRgb8(20, 20, 20));
+    img.fillRect(src, x1: 220, y1: 140, x2: 259, y2: 179, color: img.ColorRgb8(230, 30, 30));
+    // Select x 200..300, y 120..220 -> marker sits at 20..59 inside the crop.
+    final out = runPipeline(cropRequest(src, [
+      200 / 400, 120 / 300, 300 / 400, 120 / 300, //
+      300 / 400, 220 / 300, 200 / 400, 220 / 300,
+    ]));
+    expect(out.width, closeTo(100, 2));
+    expect(out.height, closeTo(100, 2));
+    bool isRed(img.Pixel p) => p.r > 180 && p.g < 80;
+    expect(isRed(out.getPixel(40, 40)), isTrue, reason: 'marker inside crop');
+    expect(isRed(out.getPixel(10, 10)), isFalse, reason: 'above-left of marker');
+    expect(isRed(out.getPixel(80, 80)), isFalse, reason: 'below-right of marker');
+  });
+
+  test('perspective crop flattens a skewed page edge to edge', () {
+    final quad = [
+      [80, 40],
+      [330, 70],
+      [360, 280],
+      [40, 260],
+    ];
+    final src = img.Image(width: 400, height: 300);
+    img.fill(src, color: img.ColorRgb8(15, 15, 15));
+    img.fillPolygon(src,
+        vertices: [for (final p in quad) img.Point(p[0], p[1])], color: img.ColorRgb8(245, 245, 245));
+    final out = runPipeline(cropRequest(src, [
+      for (final p in quad) ...[p[0] / 400, p[1] / 300],
+    ]));
+    // Every part of the result is page, including just inside each corner.
+    final w = out.width, h = out.height;
+    for (final (x, y) in [
+      (w * 0.05, h * 0.05),
+      (w * 0.95, h * 0.05),
+      (w * 0.95, h * 0.95),
+      (w * 0.05, h * 0.95),
+      (w * 0.5, h * 0.5),
+    ]) {
+      expect(out.getPixel(x.round(), y.round()).luminance, greaterThan(200), reason: 'at ($x, $y)');
+    }
+  });
+
   test('full-frame selection keeps the whole image', () {
     final src = img.Image(width: 321, height: 123);
     final out = runPipeline(PipelineRequest(
