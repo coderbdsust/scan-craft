@@ -15,10 +15,9 @@ Future<String?> showTextInputDialog(
     context: context,
     builder: (ctx) => AlertDialog(
       title: Text(title, style: const TextStyle(fontFamily: 'Space Grotesk')),
-      content: TextField(
+      content: _PromptTextField(
         controller: controller,
-        autofocus: true,
-        decoration: InputDecoration(hintText: hint),
+        hint: hint,
         onSubmitted: (v) => Navigator.pop(ctx, v),
       ),
       actions: [
@@ -29,7 +28,43 @@ Future<String?> showTextInputDialog(
         ),
       ],
     ),
-  ).whenComplete(controller.dispose);
+  );
+}
+
+/// Owns the dialog's TextEditingController so it is disposed exactly when the
+/// dialog's widgets are unmounted (after the exit animation), not when the
+/// pop result resolves. Disposing at pop-time corrupted rebuilds mid-exit.
+class _PromptTextField extends StatefulWidget {
+  const _PromptTextField({
+    required this.controller,
+    required this.hint,
+    required this.onSubmitted,
+  });
+
+  final TextEditingController controller;
+  final String hint;
+  final ValueChanged<String> onSubmitted;
+
+  @override
+  State<_PromptTextField> createState() => _PromptTextFieldState();
+}
+
+class _PromptTextFieldState extends State<_PromptTextField> {
+  @override
+  void dispose() {
+    widget.controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: widget.controller,
+      autofocus: true,
+      decoration: InputDecoration(hintText: widget.hint),
+      onSubmitted: widget.onSubmitted,
+    );
+  }
 }
 
 Future<bool> showConfirmDialog(

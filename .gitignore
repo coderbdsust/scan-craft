@@ -43,3 +43,12 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/build
+
+# Vendored plugin patch (local_auth_android vs Flutter 3.47 engine API).
+# The plugin itself must stay committed (pubspec.yaml overrides to this path);
+# only its example app is unneeded.
+/vendor/local_auth_android/example/
+# In case the plugin is ever opened standalone in an IDE:
+/vendor/local_auth_android/android/build/
+
