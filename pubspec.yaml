@@ -69,4 +69,5 @@ flutter:
 flutter_launcher_icons:
   android: "ic_launcher"
   ios: true
-  image_path: "assets/icons/app_icon.png"
+  image_path: "assets/icon/app_icon.png"
+  remove_alpha_ios: true
