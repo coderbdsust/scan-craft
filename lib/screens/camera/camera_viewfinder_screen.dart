@@ -160,7 +160,9 @@ class _CameraViewfinderScreenState extends State<CameraViewfinderScreen>
   // Live detection
   // ---------------------------------------------------------------------------
 
-  bool get _detectionEnabled => _mode != ScanMode.book;
+  /// Live detection only feeds auto-capture, so the (costly) frame stream runs
+  /// only in AUTO mode. MANUAL pages get their edges detected in the editor.
+  bool get _detectionEnabled => _mode != ScanMode.book && isAutoMode;
 
   Future<void> _startStream() async {
     final controller = _controller;
@@ -183,14 +185,17 @@ class _CameraViewfinderScreenState extends State<CameraViewfinderScreen>
     } catch (_) {}
   }
 
-  void _onFrame(CameraImage image) {
+  Future<void> _onFrame(CameraImage image) async {
     final now = DateTime.now();
     if (_processingFrame || now.difference(_lastFrame).inMilliseconds < 350) return;
     _processingFrame = true;
     _lastFrame = now;
     try {
-      final quad = _detectInFrame(image);
-      if (!mounted) return;
+      // Only the cheap down-sampling happens here; detection runs in a
+      // background isolate so the UI thread stays free.
+      final sample = _sampleLuminance(image);
+      final quad = await compute(detectFrameQuadIsolate, sample);
+      if (!mounted || !_streaming) return; // stream stopped meanwhile
       _updateQuad(quad);
     } catch (e) {
       debugPrint('ScanCraft: detection failed: $e');
@@ -199,9 +204,8 @@ class _CameraViewfinderScreenState extends State<CameraViewfinderScreen>
     }
   }
 
-  /// Samples the frame's luminance down to ~120px wide and runs the detector,
-  /// then rotates the result into the upright preview orientation.
-  List<double>? _detectInFrame(CameraImage image) {
+  /// Samples the frame's luminance down to ~120px wide for the detector.
+  Map<String, dynamic> _sampleLuminance(CameraImage image) {
     const targetW = 120;
     final plane = image.planes.first;
     final step = (image.width / targetW).ceil().clamp(1, 64);
@@ -222,21 +226,13 @@ class _CameraViewfinderScreenState extends State<CameraViewfinderScreen>
         }
       }
     }
-    final quad = detectQuadInLuminance(lum, w, h);
-    if (quad == null) return null;
-    // Android frames arrive in sensor orientation; iOS frames are already upright.
-    final rotation = Platform.isAndroid ? (_controller?.description.sensorOrientation ?? 90) : 0;
-    final pts = <List<double>>[];
-    for (var k = 0; k < 4; k++) {
-      final x = quad[k * 2], y = quad[k * 2 + 1];
-      pts.add(switch (rotation) {
-        90 => [1 - y, x],
-        180 => [1 - x, 1 - y],
-        270 => [y, 1 - x],
-        _ => [x, y],
-      });
-    }
-    return orderCorners(pts);
+    return {
+      'lum': lum,
+      'w': w,
+      'h': h,
+      // Android frames arrive in sensor orientation; iOS frames are upright.
+      'rotation': Platform.isAndroid ? (_controller?.description.sensorOrientation ?? 90) : 0,
+    };
   }
 
   static double _quadDelta(List<double> a, List<double> b) {
@@ -253,7 +249,7 @@ class _CameraViewfinderScreenState extends State<CameraViewfinderScreen>
       _stableQuad = null;
       _stableCount = 0;
       _autoArmed = true; // page removed -> ready for the next one
-      setState(() => _liveQuad = null);
+      if (_liveQuad != null) setState(() => _liveQuad = null);
       return;
     }
     final prev = _stableQuad;
@@ -264,7 +260,9 @@ class _CameraViewfinderScreenState extends State<CameraViewfinderScreen>
       _stableCount = 0;
     }
     _stableQuad = quad;
-    setState(() => _liveQuad = quad);
+    // Skip rebuilds for sub-pixel jitter.
+    final shown = _liveQuad;
+    if (shown == null || _quadDelta(shown, quad) > 0.005) setState(() => _liveQuad = quad);
 
     if (isAutoMode && _autoArmed && _stableCount >= 3 && !_capturing) {
       _autoArmed = false;
@@ -370,7 +368,11 @@ class _CameraViewfinderScreenState extends State<CameraViewfinderScreen>
     } finally {
       if (mounted) {
         setState(() => _capturing = false);
-        await _startStream();
+        // Give the user a moment to move to the next page before streaming
+        // (and analysing frames) again.
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted && !_capturing) _startStream();
+        });
       }
     }
   }
@@ -641,11 +643,21 @@ class _CameraViewfinderScreenState extends State<CameraViewfinderScreen>
             ),
             child: Row(
               children: [
-                _modeToggle('AUTO', isAutoMode, () => setState(() {
-                      isAutoMode = true;
-                      _autoArmed = true;
-                    })),
-                _modeToggle('MANUAL', !isAutoMode, () => setState(() => isAutoMode = false)),
+                _modeToggle('AUTO', isAutoMode, () {
+                  setState(() {
+                    isAutoMode = true;
+                    _autoArmed = true;
+                  });
+                  _startStream();
+                }),
+                _modeToggle('MANUAL', !isAutoMode, () {
+                  setState(() {
+                    isAutoMode = false;
+                    _liveQuad = null;
+                    _stableQuad = null;
+                  });
+                  _stopStream();
+                }),
               ],
             ),
           ),

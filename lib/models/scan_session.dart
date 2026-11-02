@@ -51,11 +51,9 @@ class ScanSession {
     replacePageIndex = null;
   }
 
+  /// Fire-and-forget async delete, so clearing a batch never blocks the UI.
   static void _deleteQuietly(File f) {
-    try {
-      if (f.existsSync()) f.deleteSync();
-    } catch (_) {
-      // Ignore cleanup failures.
-    }
+    // Ignore cleanup failures (e.g. the file is already gone).
+    f.delete().then((_) {}, onError: (_) {});
   }
 }

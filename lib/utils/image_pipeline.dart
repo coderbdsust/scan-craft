@@ -649,6 +649,25 @@ List<double>? detectQuadInLuminance(Uint8List lum, int w, int h) {
   return [for (final p in pts) ...p];
 }
 
+/// Live-camera detection for `compute`: takes {lum, w, h, rotation} and
+/// returns upright, ordered corners (or null).
+List<double>? detectFrameQuadIsolate(Map<String, dynamic> m) {
+  final quad = detectQuadInLuminance(m['lum'] as Uint8List, m['w'] as int, m['h'] as int);
+  if (quad == null) return null;
+  final rotation = m['rotation'] as int;
+  final pts = <List<double>>[];
+  for (var k = 0; k < 4; k++) {
+    final x = quad[k * 2], y = quad[k * 2 + 1];
+    pts.add(switch (rotation) {
+      90 => [1 - y, x],
+      180 => [1 - x, 1 - y],
+      270 => [y, 1 - x],
+      _ => [x, y],
+    });
+  }
+  return orderCorners(pts);
+}
+
 /// Re-orders four arbitrary normalized points into tl, tr, br, bl.
 List<double> orderCorners(List<List<double>> pts) {
   List<double> pick(double Function(List<double>) score, bool max) =>

@@ -1223,11 +1223,9 @@ class _CropCleanEditorScreenState extends State<CropCleanEditorScreen> {
         showSnack(context, 'Processing failed: $e', error: true);
       }
     } finally {
-      // The store keeps its own copies.
+      // The store keeps its own copies; delete ours without blocking the UI.
       for (final f in processed) {
-        try {
-          if (f.existsSync()) f.deleteSync();
-        } catch (_) {}
+        unawaited(f.delete().then((_) {}, onError: (_) {}));
       }
     }
   }

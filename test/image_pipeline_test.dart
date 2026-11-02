@@ -249,6 +249,7 @@ void main() {
 
     final jpgs = await ExportService(store).exportJpgs(doc);
     expect(jpgs, hasLength(2));
+    await store.refreshSizes();
     expect(store.exportsBytes, greaterThan(0));
   });
 }

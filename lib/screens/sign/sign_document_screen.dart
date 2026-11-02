@@ -158,7 +158,8 @@ class _SignDocumentScreenState extends State<SignDocumentScreen> {
                                     color: Colors.white,
                                     boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 12)],
                                   ),
-                                  child: Image.file(store.pageFile(doc, _pageIndex), fit: BoxFit.fill),
+                                  child: Image.file(store.pageFile(doc, _pageIndex),
+                                      fit: BoxFit.fill, cacheWidth: 1200),
                                 ),
                               ),
                               if (_signaturePng != null)

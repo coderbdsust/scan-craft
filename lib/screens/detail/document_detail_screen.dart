@@ -244,7 +244,9 @@ class _DocumentDetailScreenState extends State<DocumentDetailScreen> {
           ),
           body: InteractiveViewer(
             maxScale: 6,
-            child: Center(child: Image.file(store.pageFile(doc, index))),
+            // Decode at most 2000px wide: plenty for zooming, far cheaper than
+            // a full-resolution camera photo.
+            child: Center(child: Image.file(store.pageFile(doc, index), cacheWidth: 2000)),
           ),
         ),
       ),

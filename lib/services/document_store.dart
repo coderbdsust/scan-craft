@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
@@ -18,6 +19,12 @@ class DocumentStore extends ChangeNotifier {
   final List<DocFolder> _folders = [];
   AppSettings settings = AppSettings();
   bool _ready = false;
+
+  // File sizes are cached and refreshed asynchronously, so screens never stat
+  // files on the UI thread while building.
+  final Map<String, int> _docBytes = {};
+  int _exportsBytes = 0;
+  int _sizeGen = 0;
 
   bool get isReady => _ready;
   Directory get root => _root;
@@ -49,7 +56,10 @@ class DocumentStore extends ChangeNotifier {
       }
     }
     _ready = true;
+    _docBytes.clear();
+    _exportsBytes = 0;
     notifyListeners();
+    await refreshSizes();
   }
 
   Future<void> _save() async {
@@ -67,6 +77,7 @@ class DocumentStore extends ChangeNotifier {
   Future<void> _commit() async {
     await _save();
     notifyListeners();
+    unawaited(refreshSizes());
   }
 
   static final _rand = math.Random();
@@ -307,30 +318,51 @@ class DocumentStore extends ChangeNotifier {
   // Storage & settings
   // ---------------------------------------------------------------------------
 
-  int documentBytes(ScanDocument doc) {
-    var total = 0;
-    for (final f in pageFiles(doc)) {
-      try {
-        total += f.lengthSync();
-      } catch (_) {}
-    }
-    return total;
-  }
+  /// Cached size of a document's pages (0 until the first refresh finishes).
+  int documentBytes(ScanDocument doc) => _docBytes[doc.id] ?? 0;
 
   int folderBytes(String folderId) =>
       documentsIn(folderId).fold(0, (sum, d) => sum + documentBytes(d));
 
   int get scansBytes => _documents.fold(0, (sum, d) => sum + documentBytes(d));
 
-  int get exportsBytes => _dirBytes(exportsDir);
+  int get exportsBytes => _exportsBytes;
 
-  static int _dirBytes(Directory dir) {
-    if (!dir.existsSync()) return 0;
+  /// Re-measures every document and the exports folder with async file I/O,
+  /// then notifies listeners if anything changed. Overlapping calls are
+  /// collapsed: only the latest one publishes its result.
+  Future<void> refreshSizes() async {
+    final gen = ++_sizeGen;
+    final docs = _documents.toList();
+    final sizes = <String, int>{};
+    for (final d in docs) {
+      var total = 0;
+      for (final f in pageFiles(d)) {
+        try {
+          total += await f.length();
+        } catch (_) {}
+      }
+      sizes[d.id] = total;
+    }
+    final exports = await _dirBytes(exportsDir);
+    if (gen != _sizeGen) return; // a newer refresh is running
+    final changed = exports != _exportsBytes ||
+        sizes.length != _docBytes.length ||
+        sizes.entries.any((e) => _docBytes[e.key] != e.value);
+    _docBytes
+      ..clear()
+      ..addAll(sizes);
+    _exportsBytes = exports;
+    if (changed) notifyListeners();
+  }
+
+  static Future<int> _dirBytes(Directory dir) async {
+    if (!await dir.exists()) return 0;
     var total = 0;
-    for (final e in dir.listSync(recursive: true)) {
+    await for (final e in dir.list(recursive: true)) {
       if (e is File) {
         try {
-          total += e.lengthSync();
+          total += await e.length();
         } catch (_) {}
       }
     }
@@ -338,11 +370,11 @@ class DocumentStore extends ChangeNotifier {
   }
 
   /// Called after files are written to [exportsDir] so usage figures refresh.
-  void exportsChanged() => notifyListeners();
+  void exportsChanged() => unawaited(refreshSizes());
 
   Future<void> clearExports() async {
     if (await exportsDir.exists()) await exportsDir.delete(recursive: true);
-    notifyListeners();
+    await refreshSizes();
   }
 
   Future<void> updateSettings(void Function(AppSettings s) change) async {
