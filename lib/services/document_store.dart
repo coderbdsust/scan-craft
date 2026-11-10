@@ -62,13 +62,16 @@ class DocumentStore extends ChangeNotifier {
     await refreshSizes();
   }
 
+  /// The library index (documents, folders, settings) as JSON.
+  String exportIndexJson() => jsonEncode({
+        'version': 1,
+        'documents': _documents.map((d) => d.toJson()).toList(),
+        'folders': _folders.map((f) => f.toJson()).toList(),
+        'settings': settings.toJson(),
+      });
+
   Future<void> _save() async {
-    final data = jsonEncode({
-      'version': 1,
-      'documents': _documents.map((d) => d.toJson()).toList(),
-      'folders': _folders.map((f) => f.toJson()).toList(),
-      'settings': settings.toJson(),
-    });
+    final data = exportIndexJson();
     final tmp = File('${_indexFile.path}.tmp');
     await tmp.writeAsString(data, flush: true);
     await tmp.rename(_indexFile.path);
@@ -357,14 +360,18 @@ class DocumentStore extends ChangeNotifier {
   }
 
   static Future<int> _dirBytes(Directory dir) async {
-    if (!await dir.exists()) return 0;
     var total = 0;
-    await for (final e in dir.list(recursive: true)) {
-      if (e is File) {
-        try {
-          total += await e.length();
-        } catch (_) {}
+    try {
+      if (!await dir.exists()) return 0;
+      await for (final e in dir.list(recursive: true)) {
+        if (e is File) {
+          try {
+            total += await e.length();
+          } catch (_) {}
+        }
       }
+    } on FileSystemException catch (_) {
+      // The folder was removed while being measured (e.g. "Clear exports").
     }
     return total;
   }
@@ -390,6 +397,58 @@ class DocumentStore extends ChangeNotifier {
       if (await dir.exists()) await dir.delete(recursive: true);
     }
     await _commit();
+  }
+
+  /// Merges a restored backup into the library. [root] holds the backup's
+  /// `library.json` and `docs/<id>/` page folders. Documents that already
+  /// exist here (same id) are kept as they are; folders are matched by name.
+  /// Returns (added, skipped).
+  Future<(int, int)> importBackup(Directory root) async {
+    final json = jsonDecode(await File('${root.path}/library.json').readAsString()) as Map<String, dynamic>;
+    final folderIdMap = <String, String>{};
+    for (final f in (json['folders'] as List? ?? const [])) {
+      final folder = DocFolder.fromJson(f as Map<String, dynamic>);
+      final existing = _folders.where((x) => x.name == folder.name).firstOrNull;
+      if (existing != null) {
+        folderIdMap[folder.id] = existing.id;
+      } else {
+        final created = DocFolder(id: _newId(), name: folder.name, createdAt: folder.createdAt);
+        _folders.add(created);
+        folderIdMap[folder.id] = created.id;
+      }
+    }
+    var added = 0, skipped = 0;
+    for (final d in (json['documents'] as List? ?? const [])) {
+      final doc = ScanDocument.fromJson(d as Map<String, dynamic>);
+      if (byId(doc.id) != null) {
+        skipped++;
+        continue;
+      }
+      final src = Directory('${root.path}/docs/${doc.id}');
+      final dir = docDir(doc);
+      await dir.create(recursive: true);
+      final present = <String>[];
+      for (final name in doc.pages) {
+        final f = File('${src.path}/$name');
+        if (await f.exists()) {
+          await f.copy('${dir.path}/$name');
+          present.add(name);
+        }
+      }
+      if (present.isEmpty) {
+        await dir.delete(recursive: true);
+        skipped++;
+        continue;
+      }
+      doc.pages
+        ..clear()
+        ..addAll(present);
+      doc.folderId = folderIdMap[doc.folderId];
+      _documents.add(doc);
+      added++;
+    }
+    await _commit();
+    return (added, skipped);
   }
 
   static Future<void> _deleteQuietly(File f) async {

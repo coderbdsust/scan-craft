@@ -25,6 +25,13 @@ stored and exported entirely on the device — nothing is uploaded.
 - **Sign**: draw a signature and place it on any page.
 - **Biometric lock**: locked documents need Face ID / fingerprint / device PIN
   to open, and only their name is searchable.
+- **Save to Google Drive (manual)**: on a document, *Save to Google Drive*
+  builds the PDF and opens the system Save screen; pick Google Drive and a
+  folder. In *Settings → Backup*, *Back up all documents* saves one `.zip` of
+  the whole library the same way, and *Restore from backup* brings it back
+  (e.g. after reinstalling or on a new phone). The upload is done by the Drive
+  app with your own login: there is no automatic sync, and no Google Cloud setup
+  is needed.
 
 ## Project layout
 
@@ -38,7 +45,8 @@ lib/
 ```
 
 Documents live under the app's documents directory in `scancraft/`
-(`library.json` plus one folder of page JPEGs per document).
+(`library.json` plus one folder of page JPEGs per document). This is app-private
+storage: **uninstalling the app deletes it**, so keep a backup in Drive.
 
 ## Development
 

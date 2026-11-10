@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -114,6 +115,27 @@ class _DocumentDetailScreenState extends State<DocumentDetailScreen> {
         final file = await _exporter.exportPdf(doc);
         await _exporter.share([file], subject: doc.name);
       });
+
+  /// Builds the PDF and opens the system "Save to" screen, where Google Drive
+  /// (via the Drive app) is one of the destinations. Nothing is uploaded by
+  /// ScanCraft itself.
+  Future<void> _saveToDrive(ScanDocument doc) async {
+    File? pdf;
+    await _runExport('Building PDF…', () async => pdf = await _exporter.exportPdf(doc));
+    final file = pdf;
+    if (file == null || !mounted) return;
+    try {
+      final uri = await FilePicker.saveFile(
+        fileName: '${ExportService.safeFileName(doc.name)}.pdf',
+        bytes: await file.readAsBytes(),
+        mimeType: 'application/pdf',
+        dialogTitle: 'Save to Google Drive',
+      );
+      if (mounted && uri != null) showSnack(context, 'Saved "${doc.name}.pdf"');
+    } catch (e) {
+      if (mounted) showSnack(context, 'Could not save: $e', error: true);
+    }
+  }
 
   Future<void> _shareJpgs(ScanDocument doc) => _runExport('Exporting images…', () async {
         final files = await _exporter.exportJpgs(doc);
@@ -1020,6 +1042,24 @@ class _DocumentDetailScreenState extends State<DocumentDetailScreen> {
             ),
           ),
           const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: () => _saveToDrive(doc),
+            icon: const Icon(Icons.add_to_drive, color: AppTheme.primaryGreen),
+            label: const Text('Save to Google Drive'),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 44),
+              backgroundColor: AppTheme.successGreen,
+              side: const BorderSide(color: AppTheme.successBorder),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 4, bottom: 8),
+            child: Text(
+              'In the Save screen, open the menu (☰) and pick Google Drive, then a folder.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 11, color: AppTheme.slate500),
+            ),
+          ),
           Row(
             children: [
               Expanded(

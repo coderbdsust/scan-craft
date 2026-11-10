@@ -1,6 +1,12 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../models/scan_document.dart';
+import '../../services/auth_service.dart';
+import '../../services/backup_service.dart';
 import '../../services/document_store.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/dialogs.dart';
@@ -14,6 +20,79 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final store = DocumentStore.instance;
+
+  String? _busy; // label of a running backup/restore
+
+  /// Backups above this size go through the share sheet (streamed from a
+  /// file) instead of the Save screen, which needs the bytes in memory.
+  static const _maxSaveDialogBytes = 250 * 1024 * 1024;
+
+  Future<void> _backup() async {
+    if (store.documents.isEmpty) {
+      showSnack(context, 'Nothing to back up yet.');
+      return;
+    }
+    // The backup contains locked documents too, so ask for the same unlock.
+    if (store.documents.any((d) => d.locked)) {
+      final error = await AuthService.authenticate('Unlock to include locked documents in the backup');
+      if (!mounted) return;
+      if (error != null) {
+        showSnack(context, error, error: true);
+        return;
+      }
+    }
+    setState(() => _busy = 'Creating backup…');
+    File? zip;
+    try {
+      zip = await BackupService(store).createBackup();
+      if (!mounted) return;
+      setState(() => _busy = null);
+      final name = zip.uri.pathSegments.last;
+      if (await zip.length() > _maxSaveDialogBytes) {
+        await SharePlus.instance.share(ShareParams(files: [XFile(zip.path)], subject: name));
+      } else {
+        final uri = await FilePicker.saveFile(
+          fileName: name,
+          bytes: await zip.readAsBytes(),
+          mimeType: 'application/zip',
+          dialogTitle: 'Save backup to Google Drive',
+        );
+        if (mounted && uri != null) showSnack(context, 'Backup saved: $name');
+      }
+    } catch (e) {
+      if (mounted) showSnack(context, 'Backup failed: $e', error: true);
+    } finally {
+      if (mounted) setState(() => _busy = null);
+      try {
+        await zip?.delete();
+      } catch (_) {}
+    }
+  }
+
+  Future<void> _restore() async {
+    final picked = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: const ['zip'],
+      dialogTitle: 'Choose a ScanCraft backup',
+    );
+    final path = picked.isEmpty ? null : picked.first.path;
+    if (path == null || !mounted) return;
+    setState(() => _busy = 'Restoring…');
+    try {
+      final (added, skipped) = await BackupService(store).restore(File(path));
+      if (!mounted) return;
+      showSnack(
+        context,
+        skipped == 0
+            ? 'Restored $added document(s).'
+            : 'Restored $added document(s); $skipped already on this device were kept.',
+      );
+    } catch (e) {
+      if (mounted) showSnack(context, 'Restore failed: $e', error: true);
+    } finally {
+      if (mounted) setState(() => _busy = null);
+    }
+  }
 
   Future<void> _update(void Function(AppSettings s) change) async {
     await store.updateSettings(change);
@@ -84,6 +163,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
           ),
+          _section('BACKUP TO GOOGLE DRIVE'),
+          ListTile(
+            leading: const Icon(Icons.add_to_drive, color: AppTheme.primaryGreen),
+            title: const Text('Back up all documents'),
+            subtitle: const Text(
+                'Saves one backup file. In the Save screen pick Google Drive (☰ menu) and a folder.'),
+            trailing: _busy == 'Creating backup…' ? const _Spinner() : null,
+            enabled: _busy == null,
+            onTap: _backup,
+          ),
+          ListTile(
+            leading: const Icon(Icons.settings_backup_restore),
+            title: const Text('Restore from backup'),
+            subtitle: const Text('Pick a backup file (e.g. from Google Drive). Existing documents are kept.'),
+            trailing: _busy == 'Restoring…' ? const _Spinner() : null,
+            enabled: _busy == null,
+            onTap: _restore,
+          ),
           _section('DATA'),
           ListTile(
             leading: const Icon(Icons.delete_forever_outlined, color: AppTheme.error),
@@ -117,4 +214,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Text(title,
             style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.slate500)),
       );
+}
+
+class _Spinner extends StatelessWidget {
+  const _Spinner();
+
+  @override
+  Widget build(BuildContext context) =>
+      const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2));
 }
