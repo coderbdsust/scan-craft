@@ -66,7 +66,11 @@ class ScanDocument {
     this.locked = false,
     this.signed = false,
     this.kind = DocumentKind.document,
-  }) : tags = tags ?? [];
+    DateTime? modifiedAt,
+    DocSyncInfo? sync,
+  })  : tags = tags ?? [],
+        modifiedAt = modifiedAt ?? updatedAt,
+        sync = sync ?? DocSyncInfo();
 
   final String id;
   String name;
@@ -83,7 +87,35 @@ class ScanDocument {
   bool signed;
   String kind;
 
+  /// Bumped on every change (including stars, tags, notes); drives sync.
+  DateTime modifiedAt;
+
+  /// Google Drive bookkeeping (local only, never uploaded).
+  final DocSyncInfo sync;
+
   int get pageCount => pages.length;
+
+  /// True when the document changed since it was last uploaded or downloaded.
+  bool get hasUnsyncedChanges => sync.syncedModifiedAt != modifiedAt;
+
+  /// Shareable metadata written to Drive as meta.json. Device-specific state
+  /// (lock, sync ids) stays local; the folder travels by name.
+  Map<String, dynamic> toRemoteMeta({String? folderName}) => {
+        'id': id,
+        'name': name,
+        'createdAt': createdAt.toIso8601String(),
+        'updatedAt': updatedAt.toIso8601String(),
+        'modifiedAt': modifiedAt.toIso8601String(),
+        'pages': pages,
+        'folderName': folderName,
+        'tags': tags,
+        'starred': starred,
+        'notes': notes,
+        'dpi': dpi,
+        'colorProfile': colorProfile,
+        'signed': signed,
+        'kind': kind,
+      };
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -100,6 +132,8 @@ class ScanDocument {
         'locked': locked,
         'signed': signed,
         'kind': kind,
+        'modifiedAt': modifiedAt.toIso8601String(),
+        'sync': sync.toJson(),
       };
 
   factory ScanDocument.fromJson(Map<String, dynamic> j) => ScanDocument(
@@ -117,6 +151,49 @@ class ScanDocument {
         locked: j['locked'] as bool? ?? false,
         signed: j['signed'] as bool? ?? false,
         kind: j['kind'] as String? ?? DocumentKind.document,
+        modifiedAt: j['modifiedAt'] == null ? null : DateTime.parse(j['modifiedAt'] as String),
+        sync: j['sync'] == null ? null : DocSyncInfo.fromJson(j['sync'] as Map<String, dynamic>),
+      );
+}
+
+/// Where a document lives in Google Drive and what was last synced.
+class DocSyncInfo {
+  DocSyncInfo({this.folderId, Map<String, String>? pageFileIds, this.metaFileId, this.pdfFileId, this.syncedModifiedAt})
+      : pageFileIds = pageFileIds ?? {};
+
+  /// Drive folder holding this document's files (null = never uploaded).
+  String? folderId;
+
+  /// Local page file name -> Drive file id.
+  final Map<String, String> pageFileIds;
+  String? metaFileId;
+  String? pdfFileId;
+
+  /// [ScanDocument.modifiedAt] at the last successful sync.
+  DateTime? syncedModifiedAt;
+
+  void reset() {
+    folderId = null;
+    pageFileIds.clear();
+    metaFileId = null;
+    pdfFileId = null;
+    syncedModifiedAt = null;
+  }
+
+  Map<String, dynamic> toJson() => {
+        'folderId': folderId,
+        'pageFileIds': pageFileIds,
+        'metaFileId': metaFileId,
+        'pdfFileId': pdfFileId,
+        'syncedModifiedAt': syncedModifiedAt?.toIso8601String(),
+      };
+
+  factory DocSyncInfo.fromJson(Map<String, dynamic> j) => DocSyncInfo(
+        folderId: j['folderId'] as String?,
+        pageFileIds: (j['pageFileIds'] as Map? ?? const {}).cast<String, String>(),
+        metaFileId: j['metaFileId'] as String?,
+        pdfFileId: j['pdfFileId'] as String?,
+        syncedModifiedAt: j['syncedModifiedAt'] == null ? null : DateTime.parse(j['syncedModifiedAt'] as String),
       );
 }
 
@@ -147,6 +224,10 @@ class AppSettings {
     this.defaultColorProfile = ColorProfile.color,
     this.autoCapture = true,
     this.pageShape = PageShape.a4,
+    this.syncEnabled = false,
+    this.syncWifiOnly = true,
+    this.syncPdfCopies = true,
+    this.driveAccount,
   });
 
   int defaultDpi;
@@ -154,11 +235,21 @@ class AppSettings {
   bool autoCapture;
   String pageShape;
 
+  /// Google Drive sync (off until the user connects an account).
+  bool syncEnabled;
+  bool syncWifiOnly;
+  bool syncPdfCopies;
+  String? driveAccount; // email of the connected Google account
+
   Map<String, dynamic> toJson() => {
         'defaultDpi': defaultDpi,
         'defaultColorProfile': defaultColorProfile,
         'autoCapture': autoCapture,
         'pageShape': pageShape,
+        'syncEnabled': syncEnabled,
+        'syncWifiOnly': syncWifiOnly,
+        'syncPdfCopies': syncPdfCopies,
+        'driveAccount': driveAccount,
       };
 
   factory AppSettings.fromJson(Map<String, dynamic> j) => AppSettings(
@@ -167,5 +258,9 @@ class AppSettings {
             j['defaultColorProfile'] as String? ?? ColorProfile.color,
         autoCapture: j['autoCapture'] as bool? ?? true,
         pageShape: j['pageShape'] as String? ?? PageShape.a4,
+        syncEnabled: j['syncEnabled'] as bool? ?? false,
+        syncWifiOnly: j['syncWifiOnly'] as bool? ?? true,
+        syncPdfCopies: j['syncPdfCopies'] as bool? ?? true,
+        driveAccount: j['driveAccount'] as String?,
       );
 }

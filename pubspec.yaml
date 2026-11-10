@@ -27,8 +27,15 @@ dependencies:
   share_plus: ^13.3.1
   local_auth: ^3.0.2
   mobile_scanner: ^7.4.2
+<<<<<<< Updated upstream
   file_picker: ^13.3.2
   archive: ^4.6.0
+=======
+  google_sign_in: ^7.2.0
+  googleapis: ^18.0.0
+  extension_google_sign_in_as_googleapis_auth: ^3.0.0
+  connectivity_plus: ^7.3.2
+>>>>>>> Stashed changes
 
 dependency_overrides:
   # Upstream local_auth_android 2.3.0 uses FlutterLifecycleAdapter, which was

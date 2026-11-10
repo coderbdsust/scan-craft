@@ -849,7 +849,9 @@ class _CameraViewfinderScreenState extends State<CameraViewfinderScreen>
           const Icon(Icons.lock, color: AppTheme.primaryGreen, size: 16),
           const SizedBox(width: 6),
           Text(
-            '100% On-Device • No Data Leaves Phone',
+            DocumentStore.instance.settings.syncEnabled
+                ? 'Processed on-device • Synced to your Drive'
+                : '100% On-Device • No Data Leaves Phone',
             style: TextStyle(
               fontFamily: 'Space Grotesk',
               fontSize: 11,

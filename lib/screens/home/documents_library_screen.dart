@@ -637,7 +637,9 @@ class _DocumentsLibraryScreenState extends State<DocumentsLibraryScreen> {
                       ],
                     ),
                     Text(
-                      '100% Offline • Zero Cloud Sync • Stored on this device',
+                      store.settings.syncEnabled
+                          ? 'Stored on this device • Synced to ${store.settings.driveAccount ?? 'Google Drive'}'
+                          : '100% Offline • Zero Cloud Sync • Stored on this device',
                       style: TextStyle(
                         fontSize: 11,
                         color: AppTheme.slate500,

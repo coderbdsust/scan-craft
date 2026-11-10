@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'services/document_store.dart';
+import 'services/sync/sync_service.dart';
 import 'theme/app_theme.dart';
 import 'screens/home/documents_library_screen.dart';
 import 'screens/camera/camera_viewfinder_screen.dart';
@@ -27,6 +28,7 @@ Future<void> main() async {
     return;
   }
   runApp(const ScanCraftApp());
+  SyncService.instance.start(); // no-op until the user turns sync on
 }
 
 class _StartupErrorApp extends StatelessWidget {

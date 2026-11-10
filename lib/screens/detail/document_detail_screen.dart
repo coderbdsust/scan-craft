@@ -361,7 +361,7 @@ class _DocumentDetailScreenState extends State<DocumentDetailScreen> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  _buildOfflineBanner(),
+                  _buildOfflineBanner(doc),
                   const SizedBox(height: 12),
                   _buildHeader(doc),
                   const SizedBox(height: 12),
@@ -401,7 +401,15 @@ class _DocumentDetailScreenState extends State<DocumentDetailScreen> {
     );
   }
 
-  Widget _buildOfflineBanner() {
+  Widget _buildOfflineBanner(ScanDocument doc) {
+    final syncOn = store.settings.syncEnabled;
+    final synced = syncOn && !doc.locked;
+    final title = synced ? 'Synced to Google Drive' : '100% Offline Compatible';
+    final subtitle = synced
+        ? 'Saved on this device • backed up to your Drive'
+        : syncOn
+            ? 'Locked • kept on this device only, never uploaded'
+            : 'Saved to Device Storage • Zero Cloud Transmission';
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -426,7 +434,7 @@ class _DocumentDetailScreenState extends State<DocumentDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '100% Offline Compatible',
+                  title,
                   style: TextStyle(
                     fontFamily: 'Space Grotesk',
                     fontSize: 13,
@@ -435,7 +443,7 @@ class _DocumentDetailScreenState extends State<DocumentDetailScreen> {
                   ),
                 ),
                 Text(
-                  'Saved to Device Storage • Zero Cloud Transmission',
+                  subtitle,
                   style: TextStyle(
                     fontSize: 11,
                     color: AppTheme.successText.withValues(alpha: 0.8),
@@ -451,7 +459,7 @@ class _DocumentDetailScreenState extends State<DocumentDetailScreen> {
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
-              'LOCAL ONLY',
+              synced ? 'DRIVE' : 'LOCAL ONLY',
               style: TextStyle(
                 fontSize: 9,
                 fontWeight: FontWeight.w700,

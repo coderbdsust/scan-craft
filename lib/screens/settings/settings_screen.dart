@@ -8,6 +8,9 @@ import '../../models/scan_document.dart';
 import '../../services/auth_service.dart';
 import '../../services/backup_service.dart';
 import '../../services/document_store.dart';
+import '../../services/sync/google_account.dart';
+import '../../services/sync/sync_service.dart';
+import '../../utils/formatters.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/dialogs.dart';
 
@@ -163,6 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
           ),
+<<<<<<< Updated upstream
           _section('BACKUP TO GOOGLE DRIVE'),
           ListTile(
             leading: const Icon(Icons.add_to_drive, color: AppTheme.primaryGreen),
@@ -181,6 +185,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             enabled: _busy == null,
             onTap: _restore,
           ),
+=======
+          _section('GOOGLE DRIVE SYNC'),
+          ListenableBuilder(listenable: SyncService.instance, builder: (context, _) => _buildSync()),
+>>>>>>> Stashed changes
           _section('DATA'),
           ListTile(
             leading: const Icon(Icons.delete_forever_outlined, color: AppTheme.error),
@@ -206,6 +214,120 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  String _syncStatusText() {
+    final sync = SyncService.instance;
+    switch (sync.status) {
+      case SyncStatus.off:
+        return 'Sync is off';
+      case SyncStatus.syncing:
+        return 'Syncing…';
+      case SyncStatus.waitingForWifi:
+        return 'Waiting for Wi-Fi';
+      case SyncStatus.needsSignIn:
+        return 'Reconnect needed — tap Sync now';
+      case SyncStatus.error:
+        return sync.message ?? 'Sync failed';
+      case SyncStatus.idle:
+        final last = store.lastSyncAt;
+        return last == null ? 'Not synced yet' : 'Last synced ${formatRelative(last)}';
+    }
+  }
+
+  Future<void> _connect() async {
+    try {
+      await SyncService.instance.connect();
+      if (mounted) setState(() {});
+    } catch (e) {
+      if (mounted) showSnack(context, 'Could not connect Google Drive: $e', error: true);
+    }
+  }
+
+  Widget _buildSync() {
+    final s = store.settings;
+    final sync = SyncService.instance;
+    if (!GoogleAccount.instance.isConfigured) {
+      return const ListTile(
+        leading: Icon(Icons.cloud_off_outlined),
+        title: Text('Google Drive sync is not set up in this build'),
+        subtitle: Text('Add the Google OAuth client ids (see README → Google Drive sync setup).'),
+      );
+    }
+    if (s.driveAccount == null) {
+      return ListTile(
+        leading: const Icon(Icons.add_to_drive, color: AppTheme.primaryGreen),
+        title: const Text('Connect Google Drive'),
+        subtitle: const Text(
+            'Back up and sync your scans to a "ScanCraft" folder in your Drive. Locked documents stay on this device.'),
+        onTap: _connect,
+      );
+    }
+    return Column(
+      children: [
+        ListTile(
+          leading: Icon(
+            sync.status == SyncStatus.error || sync.status == SyncStatus.needsSignIn
+                ? Icons.cloud_off_outlined
+                : Icons.cloud_done_outlined,
+            color: AppTheme.primaryGreen,
+          ),
+          title: Text(s.driveAccount!),
+          subtitle: Text(_syncStatusText()),
+          trailing: TextButton(
+            onPressed: sync.status == SyncStatus.syncing
+                ? null
+                : () async {
+                    if (sync.status == SyncStatus.needsSignIn) {
+                      await _connect();
+                    } else {
+                      await sync.syncNow();
+                    }
+                  },
+            child: const Text('Sync now'),
+          ),
+        ),
+        SwitchListTile(
+          title: const Text('Sync automatically'),
+          value: s.syncEnabled,
+          activeThumbColor: AppTheme.primaryGreen,
+          onChanged: (v) async {
+            await _update((s) => s.syncEnabled = v);
+            await sync.syncNow();
+          },
+        ),
+        SwitchListTile(
+          title: const Text('Only on Wi-Fi'),
+          value: s.syncWifiOnly,
+          activeThumbColor: AppTheme.primaryGreen,
+          onChanged: (v) => _update((s) => s.syncWifiOnly = v),
+        ),
+        SwitchListTile(
+          title: const Text('Keep a PDF copy of each document'),
+          subtitle: const Text('Easy to open from Drive on any device'),
+          value: s.syncPdfCopies,
+          activeThumbColor: AppTheme.primaryGreen,
+          onChanged: (v) => _update((s) => s.syncPdfCopies = v),
+        ),
+        ListTile(
+          leading: const Icon(Icons.link_off),
+          title: const Text('Disconnect Google Drive'),
+          subtitle: const Text('Stops syncing. Files already in Drive and on this device are kept.'),
+          onTap: () async {
+            final ok = await showConfirmDialog(
+              context,
+              title: 'Disconnect Google Drive?',
+              message: 'Sync stops and ScanCraft loses access to your Drive. Nothing is deleted.',
+              confirmLabel: 'Disconnect',
+              destructive: false,
+            );
+            if (!ok) return;
+            await sync.disconnect();
+            if (mounted) setState(() {});
+          },
+        ),
+      ],
     );
   }
 
